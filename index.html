@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ku" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Exchange App">
+  <title>نرخی دۆلار - Exchange App</title>
+
+  <!-- ئایکۆنی بەرنامەکە -->
+  <link id="faviconLink" rel="icon" type="image/jpeg" href="IMG_6140.jpeg">
+  <link id="appleIconLink" rel="apple-touch-icon" href="IMG_6140.jpeg">
+
+  <!-- فایلی دیزاین -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- شاشەی ئینترۆ (IMG_6165) -->
+  <div id="introOverlay" class="intro-overlay">
+    <img id="introImg" class="intro-img" alt="Exchange App Intro" style="display: none;">
+  </div>
+
+  <!-- پەڕەی مۆدێرنی ناو Hamburger Icon -->
+  <div id="menuBackdrop" class="menu-backdrop">
+    <div class="menu-sheet" id="menuSheet">
+      <div class="menu-header">
+        <span class="menu-title">ڕێکخستنەکان</span>
+        <button id="menuCloseBtn" class="menu-close-btn" aria-label="Close">✕</button>
+      </div>
+
+      <!-- دەستەواژەی یەکەم: ڕاست = کوژاوە (Off) | چەپ = کارا (On) -->
+      <div class="menu-item">
+        <div class="menu-item-text">کاراکردنی ١٠٠٠دینار کەمتر بۆ وەرگرتنی دۆلار</div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="discountToggle">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <!-- دەستەواژەی دووەم: ڕاست = کوژاوە (Off) | چەپ = کارا (On) -->
+      <div class="menu-item">
+        <div class="menu-item-text">دۆخی تاریك</div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="darkModeToggle" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <!-- بەشی خوارەوەی لیستەکە -->
+      <div class="menu-footer">Developed by (Didar Ahmad)</div>
+    </div>
+  </div>
+
+  <div class="app-container">
+    <div class="top-bar">
+      <!-- لینکی واتسئەپ لەسەر واژووەکەت (IMG_6071) -->
+      <a href="https://wa.me/9647700068269" target="_blank" rel="noopener noreferrer" class="signature-link" title="پەیوەندی لە ڕێگەی واتسئەپ">
+        <img id="signatureImg" class="signature-img" alt="Didar Ahmad Signature" style="display: none;">
+        <svg id="fallbackSig" class="signature-fallback" viewBox="0 0 140 50" fill="none">
+          <path d="M15 38C8 35 12 18 28 14C40 11 35 32 20 36C12 38 45 22 52 12C55 18 48 32 52 34C58 36 68 18 75 10C72 22 68 35 72 38C78 40 92 22 105 20C95 24 85 28 125 22" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+
+      <!-- بەشی لای ڕاست: Hamburger لە سەروو بەروارەکە -->
+      <div class="top-right-group">
+        <button id="hamburgerBtn" class="hamburger-btn" aria-label="Menu">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+
+        <div class="datetime-box">
+          <div id="dateDisplay" title="گرتە بکە بۆ بینینی ڕۆژ">2026/10/29</div>
+          <div id="timeDisplay" class="time-text">01:25 PM</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rate-header">
+      <h1 class="rate-title">نرخی دۆلار</h1>
+      <div id="liveRateBanner" class="rate-banner">$100 = 168,150 IQD</div>
+    </div>
+
+    <div class="converter-section">
+      <div class="currency-card active-input">
+        <div id="topAmount" class="amount-display">0</div>
+        <div class="currency-info">
+          <span id="topName" class="currency-name">دۆلار</span>
+          <span id="topSymbol" class="currency-symbol">$</span>
+        </div>
+      </div>
+
+      <button id="swapBtn" class="swap-btn" aria-label="Swap">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M7 20V4M7 4L3 8M7 4L11 8M17 4V20M17 20L21 16M17 20L13 16" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+
+      <div class="currency-card">
+        <div id="bottomAmount" class="amount-display">0</div>
+        <div class="currency-info">
+          <span id="bottomName" class="currency-name">دینار</span>
+          <span id="bottomSymbol" class="currency-symbol">IQD</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="keypad" id="keypad">
+      <button class="key-btn" data-key="7">7</button>
+      <button class="key-btn" data-key="8">8</button>
+      <button class="key-btn" data-key="9">9</button>
+      <button class="key-btn" data-key="4">4</button>
+      <button class="key-btn" data-key="5">5</button>
+      <button class="key-btn" data-key="6">6</button>
+      <button class="key-btn" data-key="1">1</button>
+      <button class="key-btn" data-key="2">2</button>
+      <button class="key-btn" data-key="3">3</button>
+      <button class="key-btn transparent" data-key=".">.</button>
+      <button class="key-btn" data-key="0">0</button>
+      <button class="key-btn transparent" data-key="BACKSPACE">
+        <svg width="28" height="22" viewBox="0 0 28 22" fill="none">
+          <path d="M10 2L2 11L10 20H25C25.5523 20 26 19.5523 26 19V3C26 2.44772 25.5523 2 25 2H10Z" stroke="#f5a623" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M15 8L21 14M21 8L15 14" stroke="#f5a623" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- فایلی جاڤاسکریپت -->
+  <script src="script.js" defer></script>
+</body>
+</html>
