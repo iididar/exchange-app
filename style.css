@@ -82,6 +82,7 @@ html, body {
   justify-content: center;
   align-items: center;
   transition: background 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s ease;
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* شاشەی ئینترۆ */
@@ -121,7 +122,7 @@ html, body {
   max-width: 410px;
   height: 100%;
   max-height: 860px;
-  padding: 18px 22px 22px;
+  padding: 18px 22px calc(22px + env(safe-area-inset-bottom)) 22px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -348,11 +349,7 @@ body.light-mode .signature-img.clean-alpha {
   flex: 1;
 }
 
-/* ======================================================
-   دیزاینی Toggle Switch:
-   - لە دەستە ڕاست = کوژاوە (Off)
-   - لە دەستە چەپ = کارا (On)
-   ====================================================== */
+/* دیزاینی Toggle Switch */
 .toggle-switch {
   position: relative;
   width: 54px;
@@ -381,7 +378,6 @@ body.light-mode .toggle-slider {
   background-color: #cbbba2;
 }
 
-/* کاتێک کوژاوەیە (Off) بازنەکە لە دەستە ڕاست دەوەستێت */
 .toggle-slider::before {
   content: "";
   position: absolute;
@@ -397,7 +393,6 @@ body.light-mode .toggle-slider {
   transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* کاتێک کارا دەکرێت (On) بازنەکە دەچێتە دەستە چەپ */
 .toggle-switch input:checked + .toggle-slider {
   background: linear-gradient(135deg, #ffc107, #f59e0b);
   box-shadow: 0 0 12px rgba(245, 166, 35, 0.4);
