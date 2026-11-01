@@ -30,7 +30,7 @@ document.addEventListener('touchend', (e) => {
 }, { passive: false });
 
 // =====================================================
-// ٢. بارکردنی خێرای وێنەکان (.jpeg لە پێشەوەیە)
+// ٢. بارکردنی خێرای وێنەکان و لابردنی باگراوندی واژوو
 // =====================================================
 function resolveImageFile(baseName, onSuccess, onFail) {
   const extensions = ['.jpeg', '.JPEG', '.PNG', '.png', '.JPG', '.jpg', '.webp', ''];
@@ -50,7 +50,6 @@ function resolveImageFile(baseName, onSuccess, onFail) {
   tryNext();
 }
 
-// پاککردنەوەی تەواوەتی باگراوندی واژووەکە (کردنی بە شەفاف)
 function removeSignatureBackground(imgElement, loadedImg) {
   try {
     const canvas = document.createElement('canvas');
@@ -98,24 +97,26 @@ resolveImageFile('IMG_6071', (validPath, loadedImg) => {
   fallbackSigEl.style.display = 'none';
 });
 
+// لابردنی نەرمی شاشەی ئینترۆ دوای ٢ چرکە
 const introOverlayEl = document.getElementById('introOverlay');
 const introImgEl = document.getElementById('introImg');
-resolveImageFile(
-  'IMG_6165',
-  (validPath) => {
-    introImgEl.src = validPath;
-    introImgEl.style.display = 'block';
-    setTimeout(() => {
+setTimeout(() => {
+  introOverlayEl.classList.add('hide');
+}, 2100);
+introImgEl.onerror = () => {
+  resolveImageFile(
+    'IMG_6165',
+    (validPath) => {
+      introImgEl.src = validPath;
+    },
+    () => {
       introOverlayEl.classList.add('hide');
-    }, 2300);
-  },
-  () => {
-    introOverlayEl.classList.add('hide');
-  }
-);
+    }
+  );
+};
 
 // =====================================================
-// ٣. سیستمی حاسیبە و ڕێکخستنەکان
+// ٣. سیستمی حاسیبە، ڕێکخستنەکان و هاوکاتکردنی نرخ و کات
 // =====================================================
 const TARGET_CHANNEL = 'PMCgroup';
 const KURDISH_DAYS = [
@@ -134,6 +135,7 @@ const initialDarkMode = savedDarkPref !== null ? savedDarkPref === 'true' : true
 const state = {
   baseRatePer100USD: Number(localStorage.getItem('savedRate')) || 168150,
   lastTimestamp: Number(localStorage.getItem('savedTime')) || Date.now(),
+  lastPostId: localStorage.getItem('savedPostId') || '',
   isTopUSD: true,
   rawInput: '0',
   minus1000Active: localStorage.getItem('minus1000Active') === 'true',
@@ -148,10 +150,12 @@ const topSymbolEl = document.getElementById('topSymbol');
 const bottomNameEl = document.getElementById('bottomName');
 const bottomSymbolEl = document.getElementById('bottomSymbol');
 const liveRateBannerEl = document.getElementById('liveRateBanner');
+const datetimeBoxEl = document.getElementById('datetimeBox');
 const dateDisplayEl = document.getElementById('dateDisplay');
 const timeDisplayEl = document.getElementById('timeDisplay');
 const swapBtn = document.getElementById('swapBtn');
 const keypad = document.getElementById('keypad');
+const themeColorMeta = document.getElementById('themeColorMeta');
 
 const hamburgerBtn = document.getElementById('hamburgerBtn');
 const menuBackdrop = document.getElementById('menuBackdrop');
@@ -159,12 +163,21 @@ const menuCloseBtn = document.getElementById('menuCloseBtn');
 const discountToggle = document.getElementById('discountToggle');
 const darkModeToggle = document.getElementById('darkModeToggle');
 
-// جێگیرکردنی دۆخی سەرەتایی دوگمەکان (ڕاست = کوژاوە، چەپ = کارا)
+function applyThemeMode(isDark) {
+  if (isDark) {
+    document.body.classList.remove('light-mode');
+    document.documentElement.classList.remove('light-init');
+    if (themeColorMeta) themeColorMeta.setAttribute('content', '#0d0d0d');
+  } else {
+    document.body.classList.add('light-mode');
+    document.documentElement.classList.add('light-init');
+    if (themeColorMeta) themeColorMeta.setAttribute('content', '#f2dec0');
+  }
+}
+
 discountToggle.checked = state.minus1000Active;
 darkModeToggle.checked = state.isDarkMode;
-if (!state.isDarkMode) {
-  document.body.classList.add('light-mode');
-}
+applyThemeMode(state.isDarkMode);
 
 function getEffectiveRate() {
   return state.minus1000Active ? (state.baseRatePer100USD - 1000) : state.baseRatePer100USD;
@@ -198,7 +211,7 @@ function extractExchangeRate(text) {
   return null;
 }
 
-function renderDateOrDay() {
+function renderDateOrDay(animateTime = false) {
   const postDate = new Date(state.lastTimestamp);
   if (state.showDayName) {
     dateDisplayEl.textContent = KURDISH_DAYS[postDate.getDay()];
@@ -214,6 +227,11 @@ function renderDateOrDay() {
     minute: '2-digit',
     hour12: true
   });
+
+  if (animateTime && datetimeBoxEl) {
+    datetimeBoxEl.classList.add('sync-pulse');
+    setTimeout(() => datetimeBoxEl.classList.remove('sync-pulse'), 350);
+  }
 }
 
 function renderRateBanner(animate = false) {
@@ -246,15 +264,30 @@ function calculateAndRender() {
   }
 }
 
-function updateLiveRate(newBaseRate, timestampMs) {
-  const isChanged = state.baseRatePer100USD !== newBaseRate || state.lastTimestamp !== timestampMs;
-  state.baseRatePer100USD = newBaseRate;
-  state.lastTimestamp = timestampMs;
-  localStorage.setItem('savedRate', newBaseRate);
-  localStorage.setItem('savedTime', timestampMs);
+// نوێکردنەوەی پێکەوەیی نرخ و کاتژمێر/بەروار لە یەک چرکەساتدا
+function updateLiveRate(newBaseRate, timestampMs, postId = '') {
+  const rateChanged = state.baseRatePer100USD !== newBaseRate;
+  const postChanged = postId && state.lastPostId !== postId;
 
-  renderRateBanner(isChanged);
-  renderDateOrDay();
+  // ئەگەر نرخەکە گۆڕابوو بەڵام کاتی پۆستەکە کۆن بوو (بۆ نموونە پۆستەکە دەستکاری کرابوو)، ڕاستەوخۆ کاتی ئێستا وەردەگرێت
+  let syncedTimestamp = timestampMs || Date.now();
+  if (rateChanged && syncedTimestamp <= state.lastTimestamp) {
+    syncedTimestamp = Date.now();
+  }
+
+  const timeChanged = state.lastTimestamp !== syncedTimestamp;
+  const shouldAnimate = rateChanged || postChanged || timeChanged;
+
+  state.baseRatePer100USD = newBaseRate;
+  state.lastTimestamp = syncedTimestamp;
+  if (postId) state.lastPostId = postId;
+
+  localStorage.setItem('savedRate', newBaseRate);
+  localStorage.setItem('savedTime', syncedTimestamp);
+  if (postId) localStorage.setItem('savedPostId', postId);
+
+  renderRateBanner(shouldAnimate);
+  renderDateOrDay(shouldAnimate);
   calculateAndRender();
 }
 
@@ -287,11 +320,7 @@ discountToggle.addEventListener('change', (e) => {
 darkModeToggle.addEventListener('change', (e) => {
   state.isDarkMode = e.target.checked;
   localStorage.setItem('darkMode', state.isDarkMode);
-  if (state.isDarkMode) {
-    document.body.classList.remove('light-mode');
-  } else {
-    document.body.classList.add('light-mode');
-  }
+  applyThemeMode(state.isDarkMode);
 });
 
 function handleKeyPress(key) {
@@ -359,7 +388,7 @@ swapBtn.addEventListener('touchend', () => {
 swapBtn.addEventListener('mousedown', toggleSwap);
 
 // =====================================================
-// ٤. سیستمی ٦ پڕۆکسی هاوکات (Ultra-Fast Parallel Racing)
+// ٤. سیستمی ١٠ پڕۆکسی خێرا (Multi-Proxy Parallel Racing)
 // =====================================================
 function parseChannelHtml(htmlText) {
   const parser = new DOMParser();
@@ -373,10 +402,37 @@ function parseChannelHtml(htmlText) {
 
     const rate = extractExchangeRate(textEl.textContent);
     if (rate) {
+      const postId = msgEl.getAttribute('data-post') || '';
       const timeEl = msgEl.querySelector('.tgme_widget_message_date time');
       const datetimeAttr = timeEl ? timeEl.getAttribute('datetime') : null;
-      const postTimestamp = datetimeAttr ? new Date(datetimeAttr).getTime() : Date.now();
-      return { rate, postTimestamp };
+      const parsedTime = datetimeAttr ? new Date(datetimeAttr).getTime() : NaN;
+      const postTimestamp = !isNaN(parsedTime) ? parsedTime : Date.now();
+      return { rate, postTimestamp, postId, hasExactTime: !isNaN(parsedTime) };
+    }
+  }
+  return null;
+}
+
+function parseRssXml(xmlText) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(xmlText, 'text/xml');
+  const items = doc.querySelectorAll('item');
+
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    const title = item.querySelector('title')?.textContent || '';
+    const desc = item.querySelector('description')?.textContent || '';
+    const rate = extractExchangeRate(title + ' ' + desc);
+    if (rate) {
+      const pubDate = item.querySelector('pubDate')?.textContent;
+      const parsedTime = pubDate ? new Date(pubDate).getTime() : NaN;
+      const guid = item.querySelector('guid')?.textContent || '';
+      return {
+        rate,
+        postTimestamp: !isNaN(parsedTime) ? parsedTime : Date.now(),
+        postId: guid,
+        hasExactTime: !isNaN(parsedTime)
+      };
     }
   }
   return null;
@@ -384,7 +440,7 @@ function parseChannelHtml(htmlText) {
 
 async function fetchViaSingleProxy(proxyConfig, targetUrl) {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 3200);
+  const timeoutId = setTimeout(() => controller.abort(), 2600);
 
   try {
     const response = await fetch(proxyConfig.buildUrl(targetUrl), {
@@ -393,25 +449,38 @@ async function fetchViaSingleProxy(proxyConfig, targetUrl) {
     });
     clearTimeout(timeoutId);
 
-    if (!response.ok) throw new Error('Bad response');
+    if (!response.ok) throw new Error('Bad status');
 
     if (proxyConfig.isJson) {
       const jsonData = await response.json();
-      const htmlText = jsonData.contents || '';
+      const htmlText = jsonData.contents || jsonData.body || '';
       const parsed = parseChannelHtml(htmlText);
       if (parsed) return parsed;
-    } else if (proxyConfig.isRawText) {
+    } else if (proxyConfig.isRss) {
+      const xmlText = await response.text();
+      const parsedRss = parseRssXml(xmlText);
+      if (parsedRss) return parsedRss;
+    } else {
       const rawText = await response.text();
       const parsedHtml = parseChannelHtml(rawText);
       if (parsedHtml) return parsedHtml;
 
+      // ئەگەر پڕۆکسییە دەقییەکە نرخی نوێی دۆزییەوە، ڕاستەوخۆ کاتی ئێستای لەگەڵدا تۆمار دەکات
       const lines = rawText.split('\n');
       for (let i = lines.length - 1; i >= 0; i--) {
         const rate = extractExchangeRate(lines[i]);
-        if (rate) return { rate, postTimestamp: state.lastTimestamp };
+        if (rate) {
+          const isNewRate = rate !== state.baseRatePer100USD;
+          return {
+            rate,
+            postTimestamp: isNewRate ? Date.now() : state.lastTimestamp,
+            postId: '',
+            hasExactTime: isNewRate
+          };
+        }
       }
     }
-    throw new Error('No valid rate found');
+    throw new Error('No rate');
   } catch (err) {
     clearTimeout(timeoutId);
     throw err;
@@ -423,9 +492,11 @@ async function fetchPublicChannelPMC() {
   if (isFetching) return;
   isFetching = true;
 
-  const cacheBuster = Date.now();
-  const targetUrl = `https://t.me/s/${TARGET_CHANNEL}?t=${cacheBuster}`;
+  const nonce = `${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+  const targetUrl = `https://t.me/s/${TARGET_CHANNEL}?_=${nonce}`;
+  const rssTargetUrl = `https://tg.i-c-a.su/rss/${TARGET_CHANNEL}?limit=10&_=${nonce}`;
 
+  // ١٠ پڕۆکسی و کەناڵی هاوکات بۆ خێراترین وەرگرتنی نرخ و کاتژمێر
   const proxyList = [
     {
       buildUrl: (u) => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
@@ -444,11 +515,27 @@ async function fetchPublicChannelPMC() {
       isJson: true
     },
     {
+      buildUrl: (u) => `https://api.cors.lol/?url=${encodeURIComponent(u)}`,
+      isRawText: true
+    },
+    {
       buildUrl: (u) => `https://thingproxy.freeboard.io/fetch/${u}`,
       isRawText: true
     },
     {
-      buildUrl: () => `https://r.jina.ai/https://t.me/s/${TARGET_CHANNEL}?t=${cacheBuster}`,
+      buildUrl: (u) => `https://yacdn.org/proxy/${u}`,
+      isRawText: true
+    },
+    {
+      buildUrl: () => `https://corsproxy.io/?url=${encodeURIComponent(rssTargetUrl)}`,
+      isRss: true
+    },
+    {
+      buildUrl: () => `https://api.allorigins.win/raw?url=${encodeURIComponent(rssTargetUrl)}`,
+      isRss: true
+    },
+    {
+      buildUrl: () => `https://r.jina.ai/https://t.me/s/${TARGET_CHANNEL}?_=${nonce}`,
       isRawText: true
     }
   ];
@@ -459,11 +546,16 @@ async function fetchPublicChannelPMC() {
     );
 
     if (fastestResult && fastestResult.rate) {
-      if (
-        fastestResult.postTimestamp >= state.lastTimestamp ||
-        fastestResult.rate !== state.baseRatePer100USD
-      ) {
-        updateLiveRate(fastestResult.rate, fastestResult.postTimestamp);
+      const rateChanged = fastestResult.rate !== state.baseRatePer100USD;
+      const timeNewer = fastestResult.postTimestamp > state.lastTimestamp;
+      const postChanged = fastestResult.postId && fastestResult.postId !== state.lastPostId;
+
+      if (rateChanged || timeNewer || postChanged) {
+        updateLiveRate(
+          fastestResult.rate,
+          fastestResult.postTimestamp,
+          fastestResult.postId
+        );
       }
     }
   } catch (err) {
@@ -472,12 +564,15 @@ async function fetchPublicChannelPMC() {
   }
 }
 
-updateLiveRate(state.baseRatePer100USD, state.lastTimestamp);
+// خستنەکاری دەستبەجێ و پشکنینی خێرا هەر ١.٥ چرکە جارێک
+renderRateBanner(false);
+renderDateOrDay(false);
+calculateAndRender();
 fetchPublicChannelPMC();
-setInterval(fetchPublicChannelPMC, 2500);
+setInterval(fetchPublicChannelPMC, 1500);
 
+// نوێکردنەوەی دەستبەجێ هەر کاتێک بەکارهێنەر شاشەکە دەکاتەوە
 document.addEventListener('visibilitychange', () => {
-  if (!document.hidden) {
-    fetchPublicChannelPMC();
-  }
+  if (!document.hidden) fetchPublicChannelPMC();
 });
+window.addEventListener('focus', fetchPublicChannelPMC);
