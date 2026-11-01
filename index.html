@@ -4,27 +4,65 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Exchange App">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0d0d0d">
+  <!-- ڕەنگی فەرمی چوارچێوەی سەرەوە و خوارەوەی سەفەری و ئایفۆن -->
+  <meta name="theme-color" id="themeColorMeta" content="#0d0d0d">
   <title>نرخی دۆلار - Exchange App</title>
+
+  <!-- بارکردنی پێشوەختەی وێنەکان بۆ ئەوەی شاشەی سپی دەرنەکەوێت -->
+  <link rel="preload" as="image" href="IMG_6165.jpeg">
+  <link rel="preload" as="image" href="IMG_6071.jpeg">
 
   <!-- ئایکۆنی بەرنامەکە -->
   <link id="faviconLink" rel="icon" type="image/jpeg" href="IMG_6140.jpeg">
   <link id="appleIconLink" rel="apple-touch-icon" href="IMG_6140.jpeg">
 
-  <!-- فایلی دیزاین -->
+  <!-- ستایلی دەستبەجێ بۆ ڕێگریکردن لە شاشەی سپی لە کاتی کردنەوەدا -->
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #0d0d0d;
+      overflow: hidden;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    html.light-init, html.light-init body {
+      background-color: #f2dec0;
+    }
+    .intro-overlay {
+      position: fixed;
+      inset: -60px;
+      padding: 60px;
+      background-color: #111615;
+      z-index: 9999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  </style>
+
+  <!-- پشکنینی خێرای دۆخی ڕووناک/تاریک پێش پیشاندانی پەڕەکە -->
+  <script>
+    if (localStorage.getItem('darkMode') === 'false') {
+      document.documentElement.classList.add('light-init');
+      var meta = document.getElementById('themeColorMeta');
+      if (meta) meta.setAttribute('content', '#f2dec0');
+    }
+  </script>
+
+  <!-- فایلی دیزاینی سەرەکی -->
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <!-- شاشەی ئینترۆ (IMG_6165) -->
+  <!-- شاشەی ئینترۆ (ڕاستەوخۆ دەردەکەوێت بێ دواکەوتن) -->
   <div id="introOverlay" class="intro-overlay">
-    <img id="introImg" class="intro-img" alt="Exchange App Intro" style="display: none;">
+    <img id="introImg" class="intro-img" src="IMG_6165.jpeg" alt="Exchange App Intro">
   </div>
 
   <!-- پەڕەی مۆدێرنی ناو Hamburger Icon -->
@@ -76,9 +114,9 @@
           <span></span>
         </button>
 
-        <div class="datetime-box">
-          <div id="dateDisplay" title="گرتە بکە بۆ بینینی ڕۆژ">2026/10/29</div>
-          <div id="timeDisplay" class="time-text">01:25 PM</div>
+        <div class="datetime-box" id="datetimeBox">
+          <div id="dateDisplay" title="گرتە بکە بۆ بینینی ڕۆژ">2026/11/01</div>
+          <div id="timeDisplay" class="time-text">12:00 PM</div>
         </div>
       </div>
     </div>
