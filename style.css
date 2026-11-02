@@ -2,7 +2,6 @@
 
 /* ڕەنگەکانی دۆخی تاریک (بنەڕەتی - On) */
 :root {
-  --solid-bg: #0d0d0d;
   --bg-gradient: radial-gradient(circle at 50% 20%, #2a241b 0%, #141414 60%, #0d0d0d 100%);
   --gold-primary: #f5a623;
   --title-color: #f5a623;
@@ -31,7 +30,6 @@
 
 /* ڕەنگەکانی دۆخی ڕووناک کاتێک دۆخی تاریک Off دەکرێت */
 body.light-mode {
-  --solid-bg: #f2dec0;
   --bg-gradient: radial-gradient(circle at 50% 25%, #fdfbf6 0%, #f5e4c3 55%, #f2dec0 100%);
   --gold-primary: #b8731a;
   --title-color: #a66112;
@@ -70,63 +68,33 @@ body.light-mode {
   touch-action: none;
 }
 
-/* چارەسەری بنەڕەتی بۆ پڕکردنەوەی بەشی خوارەوەی ئایفۆن لە دۆخی Home Screen */
-html {
+html, body {
   width: 100%;
   height: 100%;
-  min-height: 100vh;
-  min-height: -webkit-fill-available;
-  background-color: var(--solid-bg);
-  overflow: hidden;
-}
-
-body {
-  width: 100%;
-  height: 100dvh;
-  min-height: 100vh;
-  min-height: -webkit-fill-available;
   overflow: hidden;
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   touch-action: none;
-  background-color: var(--solid-bg);
-  background-image: var(--bg-gradient);
+  background: var(--bg-gradient);
   color: var(--text-white);
   font-family: 'Noto Sans Arabic', 'Inter', sans-serif;
   display: flex;
   justify-content: center;
   align-items: center;
   transition: background 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s ease;
-}
-
-/* چینی درێژکراوەی باگراوند تا ژێر هێڵی خوارەوەی ئایفۆن بە تەواوی داپۆشێت */
-body::before {
-  content: "";
-  position: fixed;
-  top: -120px;
-  bottom: -120px;
-  left: -120px;
-  right: -120px;
-  background: var(--bg-gradient);
-  z-index: -1;
-  pointer-events: none;
-  transition: background 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* شاشەی ئینترۆ */
 .intro-overlay {
   position: fixed;
-  inset: -60px;
-  padding: 60px;
+  inset: 0;
   background: #111615;
   z-index: 9999;
   display: flex;
   justify-content: center;
   align-items: center;
-  transition: opacity 0.55s ease, visibility 0.55s ease;
+  transition: opacity 0.65s ease, visibility 0.65s ease;
 }
 
 .intro-overlay.hide {
@@ -136,16 +104,15 @@ body::before {
 }
 
 .intro-img {
-  width: 100vw;
-  height: 100lvh;
-  min-height: 100vh;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  animation: introSmooth 2.1s ease-out forwards;
+  animation: introSmooth 2.4s ease-out forwards;
 }
 
 @keyframes introSmooth {
-  0% { transform: scale(1.03); opacity: 0; }
-  12% { opacity: 1; }
+  0% { transform: scale(1.04); opacity: 0; }
+  15% { opacity: 1; }
   100% { transform: scale(1); opacity: 1; }
 }
 
@@ -154,8 +121,8 @@ body::before {
   width: 100%;
   max-width: 410px;
   height: 100%;
-  max-height: 880px;
-  padding: calc(14px + env(safe-area-inset-top, 0px)) 22px calc(18px + env(safe-area-inset-bottom, 0px)) 22px;
+  max-height: 860px;
+  padding: 18px 22px calc(22px + env(safe-area-inset-bottom)) 22px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -174,7 +141,7 @@ body::before {
   position: relative;
   width: 85px;
   height: 100px;
-  margin-top: 2px;
+  margin-top: 6px;
   background: transparent;
   display: flex;
   align-items: center;
@@ -233,6 +200,40 @@ body.light-mode .signature-img.clean-alpha {
   gap: 5px;
 }
 
+.top-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.refresh-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--hamburger-bg);
+  border: 1px solid var(--card-border);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  color: var(--hamburger-color);
+  transition: transform 0.15s ease, background 0.3s ease, border-color 0.3s ease;
+}
+
+.refresh-btn:active {
+  transform: scale(0.9);
+}
+
+.refresh-btn svg {
+  width: 17px;
+  height: 17px;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.refresh-btn.spinning svg {
+  transform: rotate(360deg);
+}
+
 .hamburger-btn {
   width: 38px;
   height: 34px;
@@ -266,12 +267,7 @@ body.light-mode .signature-img.clean-alpha {
   color: var(--text-muted);
   font-size: 0.9rem;
   line-height: 1.4;
-  transition: color 0.3s ease, transform 0.25s ease;
-}
-
-.datetime-box.sync-pulse {
-  color: var(--gold-primary);
-  transform: scale(1.05);
+  transition: color 0.4s ease;
 }
 
 #dateDisplay {
@@ -311,7 +307,8 @@ body.light-mode .signature-img.clean-alpha {
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding: 60px 20px 20px;
+  padding: 40px 20px 20px;
+  overflow-y: auto;
 }
 
 .menu-backdrop.open {
@@ -325,14 +322,14 @@ body.light-mode .signature-img.clean-alpha {
   background: var(--menu-bg);
   border: 1.5px solid var(--menu-border);
   border-radius: 24px;
-  padding: 22px 20px 18px;
+  padding: 20px 18px 16px;
   box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
   transform: translateY(-25px) scale(0.95);
   transition: transform 0.38s cubic-bezier(0.22, 1, 0.36, 1), background 0.4s ease, border-color 0.4s ease;
   direction: rtl;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .menu-backdrop.open .menu-sheet {
@@ -343,24 +340,24 @@ body.light-mode .signature-img.clean-alpha {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 10px;
+  padding-bottom: 8px;
   border-bottom: 1px solid var(--card-border);
 }
 
 .menu-title {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 800;
   color: var(--title-color);
 }
 
 .menu-close-btn {
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   border: none;
   background: var(--menu-item-bg);
   color: var(--text-white);
-  font-size: 1.1rem;
+  font-size: 1rem;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -370,28 +367,86 @@ body.light-mode .signature-img.clean-alpha {
 .menu-item {
   background: var(--menu-item-bg);
   border: 1px solid var(--card-border);
-  border-radius: 16px;
-  padding: 14px 16px;
+  border-radius: 14px;
+  padding: 12px 14px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .menu-item-text {
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 700;
   color: var(--text-white);
-  line-height: 1.5;
+  line-height: 1.4;
   flex: 1;
 }
 
-/* دیزاینی Toggle Switch: ڕاست = کوژاوە (Off) | چەپ = کارا (On) */
+/* بەشی هەڵبژاردنی دراوەکان لە مێنۆدا */
+.currency-selector-box {
+  background: var(--menu-item-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.currency-selector-label {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--gold-primary);
+  text-align: right;
+}
+
+.currency-row {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.currency-row.top-row button {
+  flex: 1;
+}
+
+.currency-row.bottom-row button {
+  flex: 1;
+}
+
+.curr-select-btn {
+  background: var(--btn-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  padding: 10px 6px;
+  font-family: 'Noto Sans Arabic', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-white);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.25s ease;
+}
+
+.curr-select-btn:active {
+  transform: scale(0.95);
+}
+
+.curr-select-btn.active {
+  background: linear-gradient(135deg, #ffc107, #f59e0b);
+  color: #121212;
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(245, 166, 35, 0.35);
+  font-weight: 800;
+}
+
+/* دیزاینی Toggle Switch */
 .toggle-switch {
   position: relative;
-  width: 54px;
-  height: 30px;
+  width: 50px;
+  height: 28px;
   flex-shrink: 0;
   cursor: pointer;
   display: inline-block;
@@ -419,8 +474,8 @@ body.light-mode .toggle-slider {
 .toggle-slider::before {
   content: "";
   position: absolute;
-  height: 24px;
-  width: 24px;
+  height: 22px;
+  width: 22px;
   right: 3px;
   left: auto;
   top: 3px;
@@ -437,30 +492,30 @@ body.light-mode .toggle-slider {
 }
 
 .toggle-switch input:checked + .toggle-slider::before {
-  transform: translateX(-24px);
+  transform: translateX(-22px);
 }
 
 .menu-footer {
-  margin-top: 6px;
-  padding-top: 10px;
+  margin-top: 4px;
+  padding-top: 8px;
   border-top: 1px solid var(--card-border);
   text-align: center;
   font-family: 'Inter', sans-serif;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-weight: 600;
   color: var(--text-muted);
   letter-spacing: 0.4px;
   direction: ltr;
 }
 
-/* بەشی ناونیشان و نرخی دۆلار */
+/* بەشی ناونیشان و نرخی دراوەکان */
 .rate-header {
   text-align: center;
   margin: 0 0 6px;
 }
 
 .rate-title {
-  font-size: 2rem;
+  font-size: 1.8rem;
   font-weight: 800;
   color: var(--title-color);
   text-shadow: 0 0 18px var(--gold-glow);
@@ -471,7 +526,7 @@ body.light-mode .toggle-slider {
 .rate-banner {
   direction: ltr;
   font-family: 'Inter', sans-serif;
-  font-size: 1.65rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: var(--rate-color);
   text-shadow: 0 0 20px var(--gold-glow);
@@ -530,6 +585,7 @@ body.light-mode .toggle-slider {
   flex-direction: column;
   align-items: flex-end;
 }
+
 .currency-name {
   font-size: 1.25rem;
   font-weight: 700;
