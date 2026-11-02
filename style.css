@@ -68,10 +68,17 @@ body.light-mode {
   touch-action: none;
 }
 
-html, body {
+html {
   width: 100%;
+  height: 100%;
+  background: var(--bg-gradient); /* بۆ پڕکردنەوەی پاشەڕۆکی خوارەوە لە ئایفۆندا */
+  overflow: hidden;
+}
+
+body {
+  width: 100%;
+  height: 100%;
   height: 100dvh;
-  min-height: -webkit-fill-available;
   overflow: hidden;
   position: fixed;
   inset: 0;
@@ -83,7 +90,8 @@ html, body {
   justify-content: center;
   align-items: center;
   transition: background 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s ease;
-  padding-bottom: 0;
+  margin: 0;
+  padding: 0;
 }
 
 /* شاشەی ئینترۆ */
@@ -117,13 +125,13 @@ html, body {
   100% { transform: scale(1); opacity: 1; }
 }
 
-/* پەڕەی سەرەکی */
+/* پەڕەی سەرەکی - پڕکردنەوەی تەواوی شاشە و خۆگونجاندن لەگەڵ لێواری خوارەوە */
 .app-container {
   width: 100%;
   max-width: 410px;
+  height: 100%;
   height: 100dvh;
-  max-height: none;
-  padding: 16px 20px env(safe-area-inset-bottom, 10px) 20px;
+  padding: 14px 20px calc(10px + env(safe-area-inset-bottom)) 20px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -135,14 +143,14 @@ html, body {
   justify-content: space-between;
   align-items: flex-start;
   direction: ltr;
-  min-height: 64px;
+  min-height: 60px;
 }
 
 .signature-link {
   position: relative;
-  width: 85px;
-  height: 100px;
-  margin-top: 6px;
+  width: 80px;
+  height: 90px;
+  margin-top: 4px;
   background: transparent;
   display: flex;
   align-items: center;
@@ -185,7 +193,7 @@ body.light-mode .signature-img.clean-alpha {
 }
 
 .signature-fallback {
-  height: 30px;
+  height: 28px;
   width: auto;
 }
 
@@ -198,7 +206,7 @@ body.light-mode .signature-img.clean-alpha {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 5px;
+  gap: 4px;
 }
 
 .top-actions-row {
@@ -208,9 +216,9 @@ body.light-mode .signature-img.clean-alpha {
 }
 
 .refresh-btn {
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
   background: var(--hamburger-bg);
   border: 1px solid var(--card-border);
   display: flex;
@@ -226,8 +234,8 @@ body.light-mode .signature-img.clean-alpha {
 }
 
 .refresh-btn svg {
-  width: 17px;
-  height: 17px;
+  width: 16px;
+  height: 16px;
   transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -236,16 +244,16 @@ body.light-mode .signature-img.clean-alpha {
 }
 
 .hamburger-btn {
-  width: 38px;
-  height: 34px;
-  border-radius: 10px;
+  width: 36px;
+  height: 32px;
+  border-radius: 9px;
   background: var(--hamburger-bg);
   border: 1px solid var(--card-border);
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 4.5px;
+  gap: 4px;
   cursor: pointer;
   transition: transform 0.15s ease, background 0.3s ease, border-color 0.3s ease;
 }
@@ -256,7 +264,7 @@ body.light-mode .signature-img.clean-alpha {
 
 .hamburger-btn span {
   display: block;
-  width: 18px;
+  width: 16px;
   height: 2px;
   background: var(--hamburger-color);
   border-radius: 2px;
@@ -266,8 +274,8 @@ body.light-mode .signature-img.clean-alpha {
 .datetime-box {
   text-align: right;
   color: var(--text-muted);
-  font-size: 0.9rem;
-  line-height: 1.4;
+  font-size: 0.85rem;
+  line-height: 1.3;
   transition: color 0.4s ease;
 }
 
@@ -290,7 +298,7 @@ body.light-mode .signature-img.clean-alpha {
 
 .time-text {
   font-family: 'Inter', sans-serif;
-  font-size: 0.84rem;
+  font-size: 0.8rem;
   letter-spacing: 0.5px;
 }
 
@@ -308,7 +316,7 @@ body.light-mode .signature-img.clean-alpha {
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding: 40px 20px 20px;
+  padding: 30px 18px 18px;
   overflow-y: auto;
 }
 
@@ -322,15 +330,15 @@ body.light-mode .signature-img.clean-alpha {
   max-width: 370px;
   background: var(--menu-bg);
   border: 1.5px solid var(--menu-border);
-  border-radius: 24px;
-  padding: 20px 18px 16px;
+  border-radius: 22px;
+  padding: 18px 16px 14px;
   box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
   transform: translateY(-25px) scale(0.95);
   transition: transform 0.38s cubic-bezier(0.22, 1, 0.36, 1), background 0.4s ease, border-color 0.4s ease;
   direction: rtl;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .menu-backdrop.open .menu-sheet {
@@ -341,24 +349,24 @@ body.light-mode .signature-img.clean-alpha {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 8px;
+  padding-bottom: 6px;
   border-bottom: 1px solid var(--card-border);
 }
 
 .menu-title {
-  font-size: 1.05rem;
+  font-size: 1rem;
   font-weight: 800;
   color: var(--title-color);
 }
 
 .menu-close-btn {
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   border: none;
   background: var(--menu-item-bg);
   color: var(--text-white);
-  font-size: 1rem;
+  font-size: 0.95rem;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -368,20 +376,20 @@ body.light-mode .signature-img.clean-alpha {
 .menu-item {
   background: var(--menu-item-bg);
   border: 1px solid var(--card-border);
-  border-radius: 14px;
-  padding: 12px 14px;
+  border-radius: 12px;
+  padding: 10px 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .menu-item-text {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 700;
   color: var(--text-white);
-  line-height: 1.4;
+  line-height: 1.3;
   flex: 1;
 }
 
@@ -389,15 +397,15 @@ body.light-mode .signature-img.clean-alpha {
 .currency-selector-box {
   background: var(--menu-item-bg);
   border: 1px solid var(--card-border);
-  border-radius: 14px;
-  padding: 12px;
+  border-radius: 12px;
+  padding: 10px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .currency-selector-label {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 800;
   color: var(--gold-primary);
   text-align: right;
@@ -405,7 +413,7 @@ body.light-mode .signature-img.clean-alpha {
 
 .currency-row {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
 }
 
@@ -417,10 +425,10 @@ body.light-mode .signature-img.clean-alpha {
 .curr-select-btn {
   background: var(--btn-bg);
   border: 1px solid var(--card-border);
-  border-radius: 10px;
-  padding: 10px 6px;
+  border-radius: 9px;
+  padding: 8px 4px;
   font-family: 'Noto Sans Arabic', sans-serif;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 700;
   color: var(--text-white);
   cursor: pointer;
@@ -443,8 +451,8 @@ body.light-mode .signature-img.clean-alpha {
 /* دیزاینی Toggle Switch */
 .toggle-switch {
   position: relative;
-  width: 50px;
-  height: 28px;
+  width: 46px;
+  height: 26px;
   flex-shrink: 0;
   cursor: pointer;
   display: inline-block;
@@ -472,8 +480,8 @@ body.light-mode .toggle-slider {
 .toggle-slider::before {
   content: "";
   position: absolute;
-  height: 22px;
-  width: 22px;
+  height: 20px;
+  width: 20px;
   right: 3px;
   left: auto;
   top: 3px;
@@ -490,16 +498,16 @@ body.light-mode .toggle-slider {
 }
 
 .toggle-switch input:checked + .toggle-slider::before {
-  transform: translateX(-22px);
+  transform: translateX(-20px);
 }
 
 .menu-footer {
-  margin-top: 4px;
-  padding-top: 8px;
+  margin-top: 2px;
+  padding-top: 6px;
   border-top: 1px solid var(--card-border);
   text-align: center;
   font-family: 'Inter', sans-serif;
-  font-size: 0.76rem;
+  font-size: 0.72rem;
   font-weight: 600;
   color: var(--text-muted);
   letter-spacing: 0.4px;
@@ -509,25 +517,25 @@ body.light-mode .toggle-slider {
 /* بەشی ناونیشان و نرخی دراوەکان */
 .rate-header {
   text-align: center;
-  margin: 0 0 6px;
+  margin: 0 0 4px;
 }
 
 .rate-title {
-  font-size: 1.8rem;
+  font-size: 1.6rem;
   font-weight: 800;
   color: var(--title-color);
-  text-shadow: 0 0 18px var(--gold-glow);
-  margin-bottom: 4px;
+  text-shadow: 0 0 16px var(--gold-glow);
+  margin-bottom: 2px;
   transition: color 0.4s ease, text-shadow 0.4s ease;
 }
 
 .rate-banner {
   direction: ltr;
   font-family: 'Inter', 'Noto Sans Arabic', sans-serif;
-  font-size: 1.5rem;
+  font-size: 1.35rem;
   font-weight: 700;
   color: var(--rate-color);
-  text-shadow: 0 0 20px var(--gold-glow);
+  text-shadow: 0 0 18px var(--gold-glow);
   letter-spacing: 0.5px;
   transition: transform 0.25s ease, color 0.4s ease, text-shadow 0.4s ease;
 }
@@ -540,15 +548,15 @@ body.light-mode .toggle-slider {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  margin-bottom: 8px;
+  gap: 10px;
+  margin-bottom: 4px;
 }
 
 .currency-card {
   background: var(--card-bg);
   border: 1.5px solid var(--card-border);
-  border-radius: 20px;
-  padding: 18px 22px;
+  border-radius: 18px;
+  padding: 14px 18px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -563,7 +571,7 @@ body.light-mode .toggle-slider {
 
 .amount-display {
   font-family: 'Inter', sans-serif;
-  font-size: 2.1rem;
+  font-size: 1.9rem;
   font-weight: 600;
   color: var(--text-white);
   overflow-x: auto;
@@ -585,7 +593,7 @@ body.light-mode .toggle-slider {
 }
 
 .currency-name {
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   font-weight: 700;
   color: var(--gold-primary);
   text-shadow: 0 0 10px var(--gold-glow);
@@ -594,7 +602,7 @@ body.light-mode .toggle-slider {
 
 .currency-symbol {
   font-family: 'Inter', sans-serif;
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   font-weight: 600;
   color: var(--gold-primary);
   margin-top: 2px;
@@ -606,8 +614,8 @@ body.light-mode .toggle-slider {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 52px;
-  height: 52px;
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
   background: var(--swap-bg);
   border: none;
@@ -625,8 +633,8 @@ body.light-mode .toggle-slider {
 }
 
 .swap-btn svg {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   stroke: var(--swap-icon);
   stroke-width: 2.2;
   transition: stroke 0.4s ease;
@@ -635,21 +643,21 @@ body.light-mode .toggle-slider {
 .keypad {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 14px 24px;
+  gap: 10px 18px;
   direction: ltr;
-  padding: 4px 12px;
+  padding: 2px 8px;
 }
 
 .key-btn {
   background: var(--btn-bg);
   border: 1px solid var(--btn-border);
-  border-radius: 16px;
-  height: 58px;
+  border-radius: 14px;
+  height: 50px;
   display: flex;
   justify-content: center;
   align-items: center;
   font-family: 'Inter', sans-serif;
-  font-size: 1.65rem;
+  font-size: 1.5rem;
   font-weight: 500;
   color: var(--btn-text);
   box-shadow: var(--btn-shadow);
@@ -666,7 +674,7 @@ body.light-mode .toggle-slider {
   background: transparent;
   border: none;
   box-shadow: none;
-  font-size: 2rem;
+  font-size: 1.8rem;
 }
 
 .key-btn.transparent.pressed {
