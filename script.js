@@ -149,10 +149,9 @@ try {
 }
 
 const state = {
-  selectedCurrency: 'USD', // هەمیشە لە سەرەتادا دۆلار هەڵبژێردراوە
+  selectedCurrency: 'USD',
   baseRatePer100USD: Number(localStorage.getItem('savedRate')) || 168000,
   lastTimestamp: Number(localStorage.getItem('savedTime')) || Date.now(),
-  // نرخە بنەڕەتییەکانی دراوەکانی تر تا کاتی باربوونی xeiqd.com
   xeiRates: savedXeiRates || {
     GBP: 0.7477,
     EUR: 0.862,
@@ -187,7 +186,6 @@ const discountToggle = document.getElementById('discountToggle');
 const darkModeToggle = document.getElementById('darkModeToggle');
 const currSelectBtns = document.querySelectorAll('.curr-select-btn');
 
-// جێگیرکردنی دۆخی سەرەتایی دوگمەکان
 discountToggle.checked = state.minus1000Active;
 darkModeToggle.checked = state.isDarkMode;
 if (!state.isDarkMode) {
@@ -198,13 +196,12 @@ function getEffectiveUsdRate() {
   return state.minus1000Active ? (state.baseRatePer100USD - 1000) : state.baseRatePer100USD;
 }
 
-// ژماردنی نرخی هەر دراوێک بەپێی یاسای دیاریکراو
 function getCalculatedRateForCurrency(curr) {
   const usdRate = getEffectiveUsdRate();
   const rawUsdRate = state.baseRatePer100USD;
 
   if (curr === 'USD') {
-    return usdRate; // نرخی ١٠٠ دۆلار بە دینار
+    return usdRate;
   }
 
   if (curr === 'GBP') {
@@ -212,7 +209,7 @@ function getCalculatedRateForCurrency(curr) {
     if (val > 100000) return Math.round(val);
     if (val > 1000) return Math.round(val * 100);
     if (val >= 1) return Math.round(rawUsdRate * val);
-    return Math.round(rawUsdRate / val); // نرخی ١٠٠ پاوەند بە دینار
+    return Math.round(rawUsdRate / val);
   }
 
   if (curr === 'EUR') {
@@ -220,20 +217,18 @@ function getCalculatedRateForCurrency(curr) {
     if (val > 100000) return Math.round(val);
     if (val > 1000) return Math.round(val * 100);
     if (val >= 1) return Math.round(rawUsdRate * val);
-    return Math.round(rawUsdRate / val); // نرخی ١٠٠ یۆرۆ بە دینار
+    return Math.round(rawUsdRate / val);
   }
 
   if (curr === 'TRY') {
     const val = Number(state.xeiRates.TRY) || 49.9525;
     if (val > 1000) return Math.round(val);
     if (val < 1) return Math.round(rawUsdRate * 10 * val);
-    // نرخی ١٠٠٠ لیرەی تورکی بە دینار
     return Math.round((rawUsdRate * 10) / val);
   }
 
   if (curr === 'IRR') {
     const val = Number(state.xeiRates.IRR) || 1000000;
-    // نرخی ١٠٠,٠٠٠ دینار بە تمەنی ئێرانی
     if (val > 10000000) return Math.round(val);
     return Math.round((10000000 / rawUsdRate) * val);
   }
@@ -308,7 +303,7 @@ function renderRateBanner(animate = false) {
   const curr = state.selectedCurrency;
   const rateVal = getCalculatedRateForCurrency(curr);
   const formattedRate = formatNumber(rateVal.toString(), 0);
-  const LRM = '\u200E'; // نیشانەی ڕێکخستنی ئاراستەی نووسین لە چەپەوە بۆ ڕاست
+  const LRM = '\u200E';
 
   if (curr === 'USD') {
     liveRateBannerEl.textContent = `100$ = ${formattedRate}${LRM} دینار`;
@@ -343,7 +338,6 @@ function calculateAndRender() {
   let result = 0;
 
   if (curr === 'USD' || curr === 'GBP' || curr === 'EUR') {
-    // نرخی بنەڕەتی لەسەر ١٠٠ دانەیە
     if (state.isTopForeign) {
       result = (inputValue * activeRate) / 100;
       bottomAmountEl.textContent = formatNumber(Math.round(result).toString(), 0);
@@ -355,7 +349,6 @@ function calculateAndRender() {
       bottomAmountEl.textContent = formatNumber(formattedResult, 2);
     }
   } else if (curr === 'TRY') {
-    // نرخی بنەڕەتی لیرە لەسەر ١٠٠٠ لیرەیە
     if (state.isTopForeign) {
       result = (inputValue * activeRate) / 1000;
       bottomAmountEl.textContent = formatNumber(Math.round(result).toString(), 0);
@@ -367,13 +360,10 @@ function calculateAndRender() {
       bottomAmountEl.textContent = formatNumber(formattedResult, 2);
     }
   } else if (curr === 'IRR') {
-    // نرخی بنەڕەتی تمەن: ١٠٠,٠٠٠ دینار = X تمەن
     if (state.isTopForeign) {
-      // سەرەوە تمەنە -> خوارەوە دینارە
       result = (inputValue / activeRate) * 100000;
       bottomAmountEl.textContent = formatNumber(Math.round(result).toString(), 0);
     } else {
-      // سەرەوە دینارە -> خوارەوە تمەنە
       result = (inputValue * activeRate) / 100000;
       bottomAmountEl.textContent = formatNumber(Math.round(result).toString(), 0);
     }
@@ -392,7 +382,6 @@ function updateLiveRate(newBaseRate, timestampMs) {
   calculateAndRender();
 }
 
-// گۆڕینی دراو لە ناو مێنۆی Hamburger
 currSelectBtns.forEach((btn) => {
   btn.addEventListener('click', () => {
     const chosenCurr = btn.dataset.curr;
@@ -409,7 +398,6 @@ currSelectBtns.forEach((btn) => {
     renderRateBanner(true);
     calculateAndRender();
 
-    // داخستنی مێنۆ دوای هەڵبژاردنی دراوەکە
     menuBackdrop.classList.remove('open');
   });
 });
@@ -450,7 +438,6 @@ darkModeToggle.addEventListener('change', (e) => {
   }
 });
 
-// دوگمەی Refresh بۆ نوێکردنەوەی دەستبەجێی داتاکان
 refreshBtn.addEventListener('click', () => {
   refreshBtn.classList.add('spinning');
   renderRateBanner(true);
@@ -462,7 +449,6 @@ refreshBtn.addEventListener('click', () => {
 });
 
 function handleKeyPress(key) {
-  // تەنها بۆ تمەن تا ١٦ ژمارە (زیاتر لە ١٤ ژمارە) ڕێگەپێدراوە، بۆ ئەوانی تر ١٢ ژمارە
   const maxAllowedDigits = state.selectedCurrency === 'IRR' ? 16 : 12;
 
   if (key === 'BACKSPACE') {
@@ -585,9 +571,7 @@ async function fetchOtherRatesFromXeiqd() {
         calculateAndRender();
         break;
       }
-    } catch (err) {
-      // هەوڵدان لەگەڵ لینکی دواتر ئەگەر کێشەی هەبوو
-    }
+    } catch (err) {}
   }
 
   isFetchingXei = false;
@@ -707,13 +691,11 @@ async function fetchPublicChannelPMC() {
   }
 }
 
-// دەستپێکردنی سەرەتایی بەرنامەکە
 updateCardLabels();
 updateLiveRate(state.baseRatePer100USD, state.lastTimestamp);
 fetchPublicChannelPMC();
 fetchOtherRatesFromXeiqd();
 
-// نوێکردنەوەی بەردەوام
 setInterval(fetchPublicChannelPMC, 2500);
 setInterval(fetchOtherRatesFromXeiqd, 60000);
 
