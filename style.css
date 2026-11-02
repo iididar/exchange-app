@@ -82,7 +82,7 @@ html, body {
   justify-content: center;
   align-items: center;
   transition: background 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s ease;
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: 0;
 }
 
 /* شاشەی ئینترۆ */
@@ -122,8 +122,8 @@ html, body {
   max-width: 410px;
   height: 100%;
   max-height: 860px;
-  padding: 18px 22px calc(22px + env(safe-area-inset-bottom)) 22px;
-  /* زیادکردنی قەبارەی safe-area بۆ خوارەوە */
+  padding: 18px 22px 14px 22px;
+  /* لێرە پادی خوارەوە کەمکرایەوە بۆ ئەوەی بە تەواوی پڕبێتەوە */
   display: flex;
   flex-direction: column;
   justify-content: space-between;
