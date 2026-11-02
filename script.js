@@ -30,7 +30,7 @@ document.addEventListener('touchend', (e) => {
 }, { passive: false });
 
 // =====================================================
-// ٢. بارکردنی خێرای وێنەکان و لابردنی باگراوندی واژوو
+// ٢. بارکردنی خێرای وێنەکان (.jpeg لە پێشەوەیە)
 // =====================================================
 function resolveImageFile(baseName, onSuccess, onFail) {
   const extensions = ['.jpeg', '.JPEG', '.PNG', '.png', '.JPG', '.jpg', '.webp', ''];
@@ -50,6 +50,7 @@ function resolveImageFile(baseName, onSuccess, onFail) {
   tryNext();
 }
 
+// پاککردنەوەی تەواوەتی باگراوندی واژووەکە (کردنی بە شەفاف)
 function removeSignatureBackground(imgElement, loadedImg) {
   try {
     const canvas = document.createElement('canvas');
@@ -97,28 +98,28 @@ resolveImageFile('IMG_6071', (validPath, loadedImg) => {
   fallbackSigEl.style.display = 'none';
 });
 
-// لابردنی نەرمی شاشەی ئینترۆ دوای ٢ چرکە
 const introOverlayEl = document.getElementById('introOverlay');
 const introImgEl = document.getElementById('introImg');
-setTimeout(() => {
-  introOverlayEl.classList.add('hide');
-}, 2100);
-introImgEl.onerror = () => {
-  resolveImageFile(
-    'IMG_6165',
-    (validPath) => {
-      introImgEl.src = validPath;
-    },
-    () => {
+resolveImageFile(
+  'IMG_6165',
+  (validPath) => {
+    introImgEl.src = validPath;
+    introImgEl.style.display = 'block';
+    setTimeout(() => {
       introOverlayEl.classList.add('hide');
-    }
-  );
-};
+    }, 2300);
+  },
+  () => {
+    introOverlayEl.classList.add('hide');
+  }
+);
 
 // =====================================================
-// ٣. سیستمی حاسیبە، ڕێکخستنەکان و هاوکاتکردنی نرخ و کات
+// ٣. سیستمی حاسیبە، دراوەکان و ڕێکخستنەکان
 // =====================================================
 const TARGET_CHANNEL = 'PMCgroup';
+const XEI_RATES_URL = 'https://xeiqd.com/rates.json';
+
 const KURDISH_DAYS = [
   'یەک شەممە',
   'دوو شەممە',
@@ -129,14 +130,36 @@ const KURDISH_DAYS = [
   'شەممە'
 ];
 
+const CURRENCY_META = {
+  USD: { title: 'نرخی دۆلار', name: 'دۆلار', symbol: '$' },
+  GBP: { title: 'نرخی پاوەند', name: 'پاوەند', symbol: '£' },
+  EUR: { title: 'نرخی یۆرۆ', name: 'یۆرۆ', symbol: '€' },
+  TRY: { title: 'نرخی لیرەی تورکی', name: 'لیرەی تورکی', symbol: 'TRY' },
+  IRR: { title: 'نرخی تمەنی ئێرانی', name: 'تمەن', symbol: 'IRR' }
+};
+
 const savedDarkPref = localStorage.getItem('darkMode');
 const initialDarkMode = savedDarkPref !== null ? savedDarkPref === 'true' : true;
 
+let savedXeiRates = null;
+try {
+  savedXeiRates = JSON.parse(localStorage.getItem('savedXeiRates'));
+} catch (e) {
+  savedXeiRates = null;
+}
+
 const state = {
-  baseRatePer100USD: Number(localStorage.getItem('savedRate')) || 168150,
+  selectedCurrency: 'USD', // هەمیشە لە سەرەتادا دۆلار هەڵبژێردراوە
+  baseRatePer100USD: Number(localStorage.getItem('savedRate')) || 168000,
   lastTimestamp: Number(localStorage.getItem('savedTime')) || Date.now(),
-  lastPostId: localStorage.getItem('savedPostId') || '',
-  isTopUSD: true,
+  // نرخە بنەڕەتییەکانی دراوەکانی تر تا کاتی باربوونی xeiqd.com
+  xeiRates: savedXeiRates || {
+    GBP: 0.7477,
+    EUR: 0.862,
+    TRY: 49.9525,
+    IRR: 1000000
+  },
+  isTopForeign: true,
   rawInput: '0',
   minus1000Active: localStorage.getItem('minus1000Active') === 'true',
   isDarkMode: initialDarkMode,
@@ -149,38 +172,73 @@ const topNameEl = document.getElementById('topName');
 const topSymbolEl = document.getElementById('topSymbol');
 const bottomNameEl = document.getElementById('bottomName');
 const bottomSymbolEl = document.getElementById('bottomSymbol');
+const rateTitleEl = document.getElementById('rateTitle');
 const liveRateBannerEl = document.getElementById('liveRateBanner');
-const datetimeBoxEl = document.getElementById('datetimeBox');
 const dateDisplayEl = document.getElementById('dateDisplay');
 const timeDisplayEl = document.getElementById('timeDisplay');
 const swapBtn = document.getElementById('swapBtn');
 const keypad = document.getElementById('keypad');
-const themeColorMeta = document.getElementById('themeColorMeta');
 
+const refreshBtn = document.getElementById('refreshBtn');
 const hamburgerBtn = document.getElementById('hamburgerBtn');
 const menuBackdrop = document.getElementById('menuBackdrop');
 const menuCloseBtn = document.getElementById('menuCloseBtn');
 const discountToggle = document.getElementById('discountToggle');
 const darkModeToggle = document.getElementById('darkModeToggle');
+const currSelectBtns = document.querySelectorAll('.curr-select-btn');
 
-function applyThemeMode(isDark) {
-  if (isDark) {
-    document.body.classList.remove('light-mode');
-    document.documentElement.classList.remove('light-init');
-    if (themeColorMeta) themeColorMeta.setAttribute('content', '#0d0d0d');
-  } else {
-    document.body.classList.add('light-mode');
-    document.documentElement.classList.add('light-init');
-    if (themeColorMeta) themeColorMeta.setAttribute('content', '#f2dec0');
-  }
-}
-
+// جێگیرکردنی دۆخی سەرەتایی دوگمەکان
 discountToggle.checked = state.minus1000Active;
 darkModeToggle.checked = state.isDarkMode;
-applyThemeMode(state.isDarkMode);
+if (!state.isDarkMode) {
+  document.body.classList.add('light-mode');
+}
 
-function getEffectiveRate() {
+function getEffectiveUsdRate() {
   return state.minus1000Active ? (state.baseRatePer100USD - 1000) : state.baseRatePer100USD;
+}
+
+// ژماردنی نرخی هەر دراوێک بەپێی یاسای دیاریکراو
+function getCalculatedRateForCurrency(curr) {
+  const usdRate = getEffectiveUsdRate();
+  const rawUsdRate = state.baseRatePer100USD;
+
+  if (curr === 'USD') {
+    return usdRate; // نرخی ١٠٠ دۆلار بە دینار
+  }
+
+  if (curr === 'GBP') {
+    const val = Number(state.xeiRates.GBP) || 0.7477;
+    if (val > 100000) return Math.round(val);
+    if (val > 1000) return Math.round(val * 100);
+    if (val >= 1) return Math.round(rawUsdRate * val);
+    return Math.round(rawUsdRate / val); // نرخی ١٠٠ پاوەند بە دینار
+  }
+
+  if (curr === 'EUR') {
+    const val = Number(state.xeiRates.EUR) || 0.862;
+    if (val > 100000) return Math.round(val);
+    if (val > 1000) return Math.round(val * 100);
+    if (val >= 1) return Math.round(rawUsdRate * val);
+    return Math.round(rawUsdRate / val); // نرخی ١٠٠ یۆرۆ بە دینار
+  }
+
+  if (curr === 'TRY') {
+    const val = Number(state.xeiRates.TRY) || 49.9525;
+    if (val > 1000) return Math.round(val);
+    if (val < 1) return Math.round(rawUsdRate * 10 * val);
+    // نرخی ١٠٠٠ لیرەی تورکی بە دینار
+    return Math.round((rawUsdRate * 10) / val);
+  }
+
+  if (curr === 'IRR') {
+    const val = Number(state.xeiRates.IRR) || 1000000;
+    // نرخی ١٠٠,٠٠٠ دینار بە تمەنی ئێرانی
+    if (val > 10000000) return Math.round(val);
+    return Math.round((10000000 / rawUsdRate) * val);
+  }
+
+  return usdRate;
 }
 
 function formatNumber(numStr, maxDecimals = 2) {
@@ -195,7 +253,7 @@ function formatNumber(numStr, maxDecimals = 2) {
 
 function normalizeDigits(str) {
   const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-  return str.replace(/[٠-٩]/g, d => arabicNumbers.indexOf(d));
+  return str.replace(/[٠-٩]/g, (d) => arabicNumbers.indexOf(d));
 }
 
 function extractExchangeRate(text) {
@@ -211,7 +269,7 @@ function extractExchangeRate(text) {
   return null;
 }
 
-function renderDateOrDay(animateTime = false) {
+function renderDateOrDay() {
   const postDate = new Date(state.lastTimestamp);
   if (state.showDayName) {
     dateDisplayEl.textContent = KURDISH_DAYS[postDate.getDay()];
@@ -227,16 +285,42 @@ function renderDateOrDay(animateTime = false) {
     minute: '2-digit',
     hour12: true
   });
+}
 
-  if (animateTime && datetimeBoxEl) {
-    datetimeBoxEl.classList.add('sync-pulse');
-    setTimeout(() => datetimeBoxEl.classList.remove('sync-pulse'), 350);
+function updateCardLabels() {
+  const meta = CURRENCY_META[state.selectedCurrency];
+  rateTitleEl.textContent = meta.title;
+
+  if (state.isTopForeign) {
+    topNameEl.textContent = meta.name;
+    topSymbolEl.textContent = meta.symbol;
+    bottomNameEl.textContent = 'دینار';
+    bottomSymbolEl.textContent = 'IQD';
+  } else {
+    topNameEl.textContent = 'دینار';
+    topSymbolEl.textContent = 'IQD';
+    bottomNameEl.textContent = meta.name;
+    bottomSymbolEl.textContent = meta.symbol;
   }
 }
 
 function renderRateBanner(animate = false) {
-  const effectiveRate = getEffectiveRate();
-  liveRateBannerEl.textContent = `$100 = ${formatNumber(effectiveRate.toString(), 0)} IQD`;
+  const curr = state.selectedCurrency;
+  const rateVal = getCalculatedRateForCurrency(curr);
+  const formattedRate = formatNumber(rateVal.toString(), 0);
+  const LRM = '\u200E'; // نیشانەی ڕێکخستنی ئاراستەی نووسین لە چەپەوە بۆ ڕاست
+
+  if (curr === 'USD') {
+    liveRateBannerEl.textContent = `100$ = ${formattedRate}${LRM} دینار`;
+  } else if (curr === 'GBP') {
+    liveRateBannerEl.textContent = `100£ = ${formattedRate}${LRM} دینار`;
+  } else if (curr === 'EUR') {
+    liveRateBannerEl.textContent = `100€ = ${formattedRate}${LRM} دینار`;
+  } else if (curr === 'TRY') {
+    liveRateBannerEl.textContent = `1000${LRM}لیرە${LRM} = ${formattedRate}${LRM} دینار`;
+  } else if (curr === 'IRR') {
+    liveRateBannerEl.textContent = `100,000${LRM}دینار${LRM} = ${formattedRate}${LRM} تمەن`;
+  }
 
   if (animate) {
     liveRateBannerEl.classList.add('pulse');
@@ -245,51 +329,90 @@ function renderRateBanner(animate = false) {
 }
 
 function calculateAndRender() {
-  topAmountEl.textContent = formatNumber(state.rawInput, 4);
+  const maxDecimalsInput = state.selectedCurrency === 'IRR' ? 6 : 4;
+  topAmountEl.textContent = formatNumber(state.rawInput, maxDecimalsInput);
+
   const inputValue = parseFloat(state.rawInput);
   if (isNaN(inputValue) || inputValue === 0) {
     bottomAmountEl.textContent = '0';
     return;
   }
 
-  const activeRate = getEffectiveRate();
+  const curr = state.selectedCurrency;
+  const activeRate = getCalculatedRateForCurrency(curr);
   let result = 0;
-  if (state.isTopUSD) {
-    result = (inputValue * activeRate) / 100;
-    bottomAmountEl.textContent = formatNumber(Math.round(result).toString(), 0);
-  } else {
-    result = (inputValue / activeRate) * 100;
-    const formattedResult = Number.isInteger(result) ? result.toString() : result.toFixed(2).replace(/\.?0+$/, '');
-    bottomAmountEl.textContent = formatNumber(formattedResult, 2);
+
+  if (curr === 'USD' || curr === 'GBP' || curr === 'EUR') {
+    // نرخی بنەڕەتی لەسەر ١٠٠ دانەیە
+    if (state.isTopForeign) {
+      result = (inputValue * activeRate) / 100;
+      bottomAmountEl.textContent = formatNumber(Math.round(result).toString(), 0);
+    } else {
+      result = (inputValue / activeRate) * 100;
+      const formattedResult = Number.isInteger(result)
+        ? result.toString()
+        : result.toFixed(2).replace(/\.?0+$/, '');
+      bottomAmountEl.textContent = formatNumber(formattedResult, 2);
+    }
+  } else if (curr === 'TRY') {
+    // نرخی بنەڕەتی لیرە لەسەر ١٠٠٠ لیرەیە
+    if (state.isTopForeign) {
+      result = (inputValue * activeRate) / 1000;
+      bottomAmountEl.textContent = formatNumber(Math.round(result).toString(), 0);
+    } else {
+      result = (inputValue / activeRate) * 1000;
+      const formattedResult = Number.isInteger(result)
+        ? result.toString()
+        : result.toFixed(2).replace(/\.?0+$/, '');
+      bottomAmountEl.textContent = formatNumber(formattedResult, 2);
+    }
+  } else if (curr === 'IRR') {
+    // نرخی بنەڕەتی تمەن: ١٠٠,٠٠٠ دینار = X تمەن
+    if (state.isTopForeign) {
+      // سەرەوە تمەنە -> خوارەوە دینارە
+      result = (inputValue / activeRate) * 100000;
+      bottomAmountEl.textContent = formatNumber(Math.round(result).toString(), 0);
+    } else {
+      // سەرەوە دینارە -> خوارەوە تمەنە
+      result = (inputValue * activeRate) / 100000;
+      bottomAmountEl.textContent = formatNumber(Math.round(result).toString(), 0);
+    }
   }
 }
 
-// نوێکردنەوەی پێکەوەیی نرخ و کاتژمێر/بەروار لە یەک چرکەساتدا
-function updateLiveRate(newBaseRate, timestampMs, postId = '') {
-  const rateChanged = state.baseRatePer100USD !== newBaseRate;
-  const postChanged = postId && state.lastPostId !== postId;
-
-  // ئەگەر نرخەکە گۆڕابوو بەڵام کاتی پۆستەکە کۆن بوو (بۆ نموونە پۆستەکە دەستکاری کرابوو)، ڕاستەوخۆ کاتی ئێستا وەردەگرێت
-  let syncedTimestamp = timestampMs || Date.now();
-  if (rateChanged && syncedTimestamp <= state.lastTimestamp) {
-    syncedTimestamp = Date.now();
-  }
-
-  const timeChanged = state.lastTimestamp !== syncedTimestamp;
-  const shouldAnimate = rateChanged || postChanged || timeChanged;
-
+function updateLiveRate(newBaseRate, timestampMs) {
+  const isChanged = state.baseRatePer100USD !== newBaseRate || state.lastTimestamp !== timestampMs;
   state.baseRatePer100USD = newBaseRate;
-  state.lastTimestamp = syncedTimestamp;
-  if (postId) state.lastPostId = postId;
-
+  state.lastTimestamp = timestampMs;
   localStorage.setItem('savedRate', newBaseRate);
-  localStorage.setItem('savedTime', syncedTimestamp);
-  if (postId) localStorage.setItem('savedPostId', postId);
+  localStorage.setItem('savedTime', timestampMs);
 
-  renderRateBanner(shouldAnimate);
-  renderDateOrDay(shouldAnimate);
+  renderRateBanner(isChanged);
+  renderDateOrDay();
   calculateAndRender();
 }
+
+// گۆڕینی دراو لە ناو مێنۆی Hamburger
+currSelectBtns.forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const chosenCurr = btn.dataset.curr;
+    if (!chosenCurr) return;
+
+    state.selectedCurrency = chosenCurr;
+    state.rawInput = '0';
+    state.isTopForeign = true;
+
+    currSelectBtns.forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    updateCardLabels();
+    renderRateBanner(true);
+    calculateAndRender();
+
+    // داخستنی مێنۆ دوای هەڵبژاردنی دراوەکە
+    menuBackdrop.classList.remove('open');
+  });
+});
 
 dateDisplayEl.addEventListener('click', () => {
   state.showDayName = !state.showDayName;
@@ -320,16 +443,34 @@ discountToggle.addEventListener('change', (e) => {
 darkModeToggle.addEventListener('change', (e) => {
   state.isDarkMode = e.target.checked;
   localStorage.setItem('darkMode', state.isDarkMode);
-  applyThemeMode(state.isDarkMode);
+  if (state.isDarkMode) {
+    document.body.classList.remove('light-mode');
+  } else {
+    document.body.classList.add('light-mode');
+  }
+});
+
+// دوگمەی Refresh بۆ نوێکردنەوەی دەستبەجێی داتاکان
+refreshBtn.addEventListener('click', () => {
+  refreshBtn.classList.add('spinning');
+  renderRateBanner(true);
+  fetchPublicChannelPMC();
+  fetchOtherRatesFromXeiqd();
+  setTimeout(() => {
+    refreshBtn.classList.remove('spinning');
+  }, 650);
 });
 
 function handleKeyPress(key) {
+  // تەنها بۆ تمەن تا ١٦ ژمارە (زیاتر لە ١٤ ژمارە) ڕێگەپێدراوە، بۆ ئەوانی تر ١٢ ژمارە
+  const maxAllowedDigits = state.selectedCurrency === 'IRR' ? 16 : 12;
+
   if (key === 'BACKSPACE') {
     state.rawInput = state.rawInput.length > 1 ? state.rawInput.slice(0, -1) : '0';
   } else if (key === '.') {
     if (!state.rawInput.includes('.')) state.rawInput += '.';
   } else {
-    if (state.rawInput.replace('.', '').length >= 12) return;
+    if (state.rawInput.replace('.', '').length >= maxAllowedDigits) return;
     state.rawInput = state.rawInput === '0' ? key : state.rawInput + key;
   }
   calculateAndRender();
@@ -359,19 +500,9 @@ keypad.addEventListener('mousedown', (e) => {
 });
 
 function toggleSwap() {
-  state.isTopUSD = !state.isTopUSD;
+  state.isTopForeign = !state.isTopForeign;
   state.rawInput = '0';
-  if (state.isTopUSD) {
-    topNameEl.textContent = 'دۆلار';
-    topSymbolEl.textContent = '$';
-    bottomNameEl.textContent = 'دینار';
-    bottomSymbolEl.textContent = 'IQD';
-  } else {
-    topNameEl.textContent = 'دینار';
-    topSymbolEl.textContent = 'IQD';
-    bottomNameEl.textContent = 'دۆلار';
-    bottomSymbolEl.textContent = '$';
-  }
+  updateCardLabels();
   calculateAndRender();
 }
 
@@ -388,7 +519,82 @@ swapBtn.addEventListener('touchend', () => {
 swapBtn.addEventListener('mousedown', toggleSwap);
 
 // =====================================================
-// ٤. سیستمی ١٠ پڕۆکسی خێرا (Multi-Proxy Parallel Racing)
+// ٤. وەرگرتنی نرخی دراوەکانی تر لە xeiqd.com/rates.json
+// =====================================================
+function parseXeiJsonData(jsonObj) {
+  if (!jsonObj || typeof jsonObj !== 'object') return null;
+  const source = jsonObj.rates || jsonObj.data || jsonObj;
+
+  const findVal = (keys) => {
+    for (const k of keys) {
+      if (source[k] !== undefined && !isNaN(Number(source[k]))) {
+        return Number(source[k]);
+      }
+      const lowerKey = Object.keys(source).find((item) => item.toLowerCase() === k.toLowerCase());
+      if (lowerKey && !isNaN(Number(source[lowerKey]))) {
+        return Number(source[lowerKey]);
+      }
+    }
+    return null;
+  };
+
+  const gbp = findVal(['GBP', 'gbp']);
+  const eur = findVal(['EUR', 'eur']);
+  const tryRate = findVal(['TRY', 'try', 'TRL']);
+  const irr = findVal(['IRR', 'irr', 'IRT', 'TOMAN']);
+
+  if (gbp || eur || tryRate || irr) {
+    return {
+      GBP: gbp || state.xeiRates.GBP,
+      EUR: eur || state.xeiRates.EUR,
+      TRY: tryRate || state.xeiRates.TRY,
+      IRR: irr || state.xeiRates.IRR
+    };
+  }
+  return null;
+}
+
+let isFetchingXei = false;
+async function fetchOtherRatesFromXeiqd() {
+  if (isFetchingXei) return;
+  isFetchingXei = true;
+
+  const targetUrl = `${XEI_RATES_URL}?t=${Date.now()}`;
+  const urlsToTry = [
+    targetUrl,
+    `https://corsproxy.io/?url=${encodeURIComponent(targetUrl)}`,
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`,
+    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`
+  ];
+
+  for (const url of urlsToTry) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4000);
+      const res = await fetch(url, { cache: 'no-store', signal: controller.signal });
+      clearTimeout(timeoutId);
+
+      if (!res.ok) continue;
+      const data = await res.json();
+      const parsed = parseXeiJsonData(data);
+
+      if (parsed) {
+        state.xeiRates = parsed;
+        localStorage.setItem('savedXeiRates', JSON.stringify(parsed));
+        renderRateBanner(false);
+        calculateAndRender();
+        break;
+      }
+    } catch (err) {
+      // هەوڵدان لەگەڵ لینکی دواتر ئەگەر کێشەی هەبوو
+    }
+  }
+
+  isFetchingXei = false;
+}
+
+// =====================================================
+// ٥. سیستمی ٦ پڕۆکسی هاوکات بۆ نرخی دۆلار لە تێلێگرامەوە
 // =====================================================
 function parseChannelHtml(htmlText) {
   const parser = new DOMParser();
@@ -402,37 +608,10 @@ function parseChannelHtml(htmlText) {
 
     const rate = extractExchangeRate(textEl.textContent);
     if (rate) {
-      const postId = msgEl.getAttribute('data-post') || '';
       const timeEl = msgEl.querySelector('.tgme_widget_message_date time');
       const datetimeAttr = timeEl ? timeEl.getAttribute('datetime') : null;
-      const parsedTime = datetimeAttr ? new Date(datetimeAttr).getTime() : NaN;
-      const postTimestamp = !isNaN(parsedTime) ? parsedTime : Date.now();
-      return { rate, postTimestamp, postId, hasExactTime: !isNaN(parsedTime) };
-    }
-  }
-  return null;
-}
-
-function parseRssXml(xmlText) {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(xmlText, 'text/xml');
-  const items = doc.querySelectorAll('item');
-
-  for (let i = 0; i < items.length; i++) {
-    const item = items[i];
-    const title = item.querySelector('title')?.textContent || '';
-    const desc = item.querySelector('description')?.textContent || '';
-    const rate = extractExchangeRate(title + ' ' + desc);
-    if (rate) {
-      const pubDate = item.querySelector('pubDate')?.textContent;
-      const parsedTime = pubDate ? new Date(pubDate).getTime() : NaN;
-      const guid = item.querySelector('guid')?.textContent || '';
-      return {
-        rate,
-        postTimestamp: !isNaN(parsedTime) ? parsedTime : Date.now(),
-        postId: guid,
-        hasExactTime: !isNaN(parsedTime)
-      };
+      const postTimestamp = datetimeAttr ? new Date(datetimeAttr).getTime() : Date.now();
+      return { rate, postTimestamp };
     }
   }
   return null;
@@ -440,7 +619,7 @@ function parseRssXml(xmlText) {
 
 async function fetchViaSingleProxy(proxyConfig, targetUrl) {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 2600);
+  const timeoutId = setTimeout(() => controller.abort(), 3200);
 
   try {
     const response = await fetch(proxyConfig.buildUrl(targetUrl), {
@@ -449,38 +628,25 @@ async function fetchViaSingleProxy(proxyConfig, targetUrl) {
     });
     clearTimeout(timeoutId);
 
-    if (!response.ok) throw new Error('Bad status');
+    if (!response.ok) throw new Error('Bad response');
 
     if (proxyConfig.isJson) {
       const jsonData = await response.json();
-      const htmlText = jsonData.contents || jsonData.body || '';
+      const htmlText = jsonData.contents || '';
       const parsed = parseChannelHtml(htmlText);
       if (parsed) return parsed;
-    } else if (proxyConfig.isRss) {
-      const xmlText = await response.text();
-      const parsedRss = parseRssXml(xmlText);
-      if (parsedRss) return parsedRss;
-    } else {
+    } else if (proxyConfig.isRawText) {
       const rawText = await response.text();
       const parsedHtml = parseChannelHtml(rawText);
       if (parsedHtml) return parsedHtml;
 
-      // ئەگەر پڕۆکسییە دەقییەکە نرخی نوێی دۆزییەوە، ڕاستەوخۆ کاتی ئێستای لەگەڵدا تۆمار دەکات
       const lines = rawText.split('\n');
       for (let i = lines.length - 1; i >= 0; i--) {
         const rate = extractExchangeRate(lines[i]);
-        if (rate) {
-          const isNewRate = rate !== state.baseRatePer100USD;
-          return {
-            rate,
-            postTimestamp: isNewRate ? Date.now() : state.lastTimestamp,
-            postId: '',
-            hasExactTime: isNewRate
-          };
-        }
+        if (rate) return { rate, postTimestamp: state.lastTimestamp };
       }
     }
-    throw new Error('No rate');
+    throw new Error('No valid rate found');
   } catch (err) {
     clearTimeout(timeoutId);
     throw err;
@@ -492,11 +658,9 @@ async function fetchPublicChannelPMC() {
   if (isFetching) return;
   isFetching = true;
 
-  const nonce = `${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
-  const targetUrl = `https://t.me/s/${TARGET_CHANNEL}?_=${nonce}`;
-  const rssTargetUrl = `https://tg.i-c-a.su/rss/${TARGET_CHANNEL}?limit=10&_=${nonce}`;
+  const cacheBuster = Date.now();
+  const targetUrl = `https://t.me/s/${TARGET_CHANNEL}?t=${cacheBuster}`;
 
-  // ١٠ پڕۆکسی و کەناڵی هاوکات بۆ خێراترین وەرگرتنی نرخ و کاتژمێر
   const proxyList = [
     {
       buildUrl: (u) => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
@@ -515,27 +679,11 @@ async function fetchPublicChannelPMC() {
       isJson: true
     },
     {
-      buildUrl: (u) => `https://api.cors.lol/?url=${encodeURIComponent(u)}`,
-      isRawText: true
-    },
-    {
       buildUrl: (u) => `https://thingproxy.freeboard.io/fetch/${u}`,
       isRawText: true
     },
     {
-      buildUrl: (u) => `https://yacdn.org/proxy/${u}`,
-      isRawText: true
-    },
-    {
-      buildUrl: () => `https://corsproxy.io/?url=${encodeURIComponent(rssTargetUrl)}`,
-      isRss: true
-    },
-    {
-      buildUrl: () => `https://api.allorigins.win/raw?url=${encodeURIComponent(rssTargetUrl)}`,
-      isRss: true
-    },
-    {
-      buildUrl: () => `https://r.jina.ai/https://t.me/s/${TARGET_CHANNEL}?_=${nonce}`,
+      buildUrl: () => `https://r.jina.ai/https://t.me/s/${TARGET_CHANNEL}?t=${cacheBuster}`,
       isRawText: true
     }
   ];
@@ -546,16 +694,11 @@ async function fetchPublicChannelPMC() {
     );
 
     if (fastestResult && fastestResult.rate) {
-      const rateChanged = fastestResult.rate !== state.baseRatePer100USD;
-      const timeNewer = fastestResult.postTimestamp > state.lastTimestamp;
-      const postChanged = fastestResult.postId && fastestResult.postId !== state.lastPostId;
-
-      if (rateChanged || timeNewer || postChanged) {
-        updateLiveRate(
-          fastestResult.rate,
-          fastestResult.postTimestamp,
-          fastestResult.postId
-        );
+      if (
+        fastestResult.postTimestamp >= state.lastTimestamp ||
+        fastestResult.rate !== state.baseRatePer100USD
+      ) {
+        updateLiveRate(fastestResult.rate, fastestResult.postTimestamp);
       }
     }
   } catch (err) {
@@ -564,15 +707,19 @@ async function fetchPublicChannelPMC() {
   }
 }
 
-// خستنەکاری دەستبەجێ و پشکنینی خێرا هەر ١.٥ چرکە جارێک
-renderRateBanner(false);
-renderDateOrDay(false);
-calculateAndRender();
+// دەستپێکردنی سەرەتایی بەرنامەکە
+updateCardLabels();
+updateLiveRate(state.baseRatePer100USD, state.lastTimestamp);
 fetchPublicChannelPMC();
-setInterval(fetchPublicChannelPMC, 1500);
+fetchOtherRatesFromXeiqd();
 
-// نوێکردنەوەی دەستبەجێ هەر کاتێک بەکارهێنەر شاشەکە دەکاتەوە
+// نوێکردنەوەی بەردەوام
+setInterval(fetchPublicChannelPMC, 2500);
+setInterval(fetchOtherRatesFromXeiqd, 60000);
+
 document.addEventListener('visibilitychange', () => {
-  if (!document.hidden) fetchPublicChannelPMC();
+  if (!document.hidden) {
+    fetchPublicChannelPMC();
+    fetchOtherRatesFromXeiqd();
+  }
 });
-window.addEventListener('focus', fetchPublicChannelPMC);
