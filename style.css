@@ -408,10 +408,7 @@ body.light-mode .signature-img.clean-alpha {
   width: 100%;
 }
 
-.currency-row.top-row button {
-  flex: 1;
-}
-
+.currency-row.top-row button,
 .currency-row.bottom-row button {
   flex: 1;
 }
@@ -525,7 +522,7 @@ body.light-mode .toggle-slider {
 
 .rate-banner {
   direction: ltr;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', 'Noto Sans Arabic', sans-serif;
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--rate-color);
