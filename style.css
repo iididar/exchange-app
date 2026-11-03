@@ -1,777 +1,210 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+Arabic:wght@500;700;800&display=swap');
-
-:root {
-  --bg-gradient: radial-gradient(circle at 50% 20%, #2a241b 0%, #141414 60%, #0d0d0d 100%);
-  --bottom-safe-bg: #0d0d0d;
-  --gold-primary: #f5a623;
-  --title-color: #f5a623;
-  --rate-color: #f5a623;
-  --gold-glow: rgba(245, 166, 35, 0.45);
-  --card-bg: #1c1c1c;
-  --card-border: #2e2e2e;
-  --card-active-border: rgba(245, 166, 35, 0.35);
-  --card-shadow: 0 10px 25px rgba(0, 0, 0, 0.55), inset 0 1px 1px rgba(255, 255, 255, 0.05);
-  --btn-bg: #35353a;
-  --btn-active: #484850;
-  --btn-border: rgba(255, 255, 255, 0.09);
-  --btn-shadow: 0 6px 14px rgba(0, 0, 0, 0.4);
-  --btn-text: #f5a623;
-  --text-white: #ffffff;
-  --text-muted: #9e9e9e;
-  --swap-bg: linear-gradient(145deg, #ffc107, #f59e0b);
-  --swap-shadow: 0 4px 16px rgba(245, 158, 11, 0.5);
-  --swap-icon: #121212;
-  --menu-bg: rgba(26, 26, 26, 0.96);
-  --menu-border: rgba(245, 166, 35, 0.2);
-  --menu-item-bg: rgba(255, 255, 255, 0.04);
-  --hamburger-bg: rgba(255, 255, 255, 0.06);
-  --hamburger-color: #f5a623;
-}
-
-body.light-mode {
-  --bg-gradient: radial-gradient(circle at 50% 25%, #fdfbf6 0%, #f5e4c3 55%, #f2dec0 100%);
-  --bottom-safe-bg: #f2dec0;
-  --gold-primary: #b8731a;
-  --title-color: #a66112;
-  --rate-color: #c97f22;
-  --gold-glow: rgba(184, 115, 26, 0.08);
-  --card-bg: #ffffff;
-  --card-border: #efe6d5;
-  --card-active-border: rgba(201, 127, 34, 0.4);
-  --card-shadow: 0 10px 24px rgba(166, 97, 18, 0.12);
-  --btn-bg: #faf6ef;
-  --btn-active: #efe6d5;
-  --btn-border: rgba(166, 97, 18, 0.1);
-  --btn-shadow: 0 5px 12px rgba(140, 95, 30, 0.07);
-  --btn-text: #c77d1e;
-  --text-white: #1f1f1f;
-  --text-muted: #4f463d;
-  --swap-bg: linear-gradient(145deg, #ff9800, #f57c00);
-  --swap-shadow: 0 5px 16px rgba(245, 124, 0, 0.4);
-  --swap-icon: #ffffff;
-  --menu-bg: rgba(252, 247, 238, 0.97);
-  --menu-border: rgba(184, 115, 26, 0.22);
-  --menu-item-bg: rgba(184, 115, 26, 0.07);
-  --hamburger-bg: rgba(184, 115, 26, 0.1);
-  --hamburger-color: #a66112;
-}
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-touch-callout: none;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: none;
-}
-
-html {
-  width: 100%;
-  height: 100%;
-  min-height: 100dvh;
-  min-height: -webkit-fill-available;
-  background-color: #111615;
-  -webkit-text-size-adjust: 100%;
-  -moz-text-size-adjust: 100%;
-  text-size-adjust: 100%;
-  font-synthesis: none;
-  -webkit-font-smoothing: antialiased;
-}
-
-body {
-  width: 100%;
-  height: 100%;
-  min-height: 100dvh;
-  min-height: -webkit-fill-available;
-  overflow: hidden;
-  position: fixed;
-  inset: 0;
-  touch-action: none;
-  background-color: var(--bottom-safe-bg);
-  background-image: var(--bg-gradient);
-  color: var(--text-white);
-  font-family: 'Noto Sans Arabic', 'Inter', sans-serif;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: background-color 0.5s ease, color 0.4s ease;
-}
-
-/* داپۆشینی تەواوەتی ناوچەی Home Indicator لە ئایفۆن بۆ ئەوەی هەرگیز سپی نەبێت */
-body::before {
-  content: "";
-  position: fixed;
-  top: -120px;
-  left: -60px;
-  right: -60px;
-  bottom: -120px;
-  background-color: var(--bottom-safe-bg);
-  background-image: var(--bg-gradient);
-  z-index: -2;
-  pointer-events: none;
-}
-
-body::after {
-  content: "";
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: calc(-1 * env(safe-area-inset-bottom, 0px) - 60px);
-  height: calc(env(safe-area-inset-bottom, 0px) + 65px);
-  background-color: var(--bottom-safe-bg);
-  z-index: -1;
-  pointer-events: none;
-}
-
-.intro-overlay {
-  position: fixed;
-  top: calc(-1 * env(safe-area-inset-top, 0px));
-  left: 0;
-  right: 0;
-  bottom: calc(-1 * env(safe-area-inset-bottom, 0px));
-  width: 100vw;
-  height: calc(100dvh + env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px));
-  background-color: #111615;
-  z-index: 9999;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: opacity 0.65s ease, visibility 0.65s ease;
-}
-
-.intro-overlay::after {
-  content: "";
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: -100px;
-  height: 140px;
-  background-color: #111615;
-  z-index: -1;
-}
-
-.intro-overlay.hide {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-}
-
-.intro-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  animation: introSmooth 2.4s ease-out forwards;
-}
-
-@keyframes introSmooth {
-  0% { transform: scale(1.04); opacity: 0; }
-  15% { opacity: 1; }
-  100% { transform: scale(1); opacity: 1; }
-}
-
-/* ڕێکخستنی پەڕەکە تا لە Add to Home Screen نەچێتە سەرەوە و دەست لە Hamburger بدرێت */
-.app-container {
-  width: 100%;
-  max-width: 410px;
-  height: 100%;
-  max-height: 880px;
-  padding-top: max(18px, calc(env(safe-area-inset-top, 0px) + 12px));
-  padding-right: 22px;
-  padding-bottom: max(20px, calc(env(safe-area-inset-bottom, 0px) + 14px));
-  padding-left: 22px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  position: relative;
-  z-index: 1;
-}
-
-.top-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  direction: ltr;
-  min-height: 64px;
-  position: relative;
-  z-index: 30;
-}
-
-.signature-link {
-  position: relative;
-  width: 85px;
-  height: 100px;
-  margin-top: 6px;
-  background: transparent;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  overflow: hidden;
-  text-decoration: none;
-  cursor: pointer;
-  touch-action: manipulation;
-  transition: transform 0.15s ease, opacity 0.15s ease;
-}
-
-.signature-link:active {
-  transform: scale(0.92);
-  opacity: 0.8;
-}
-
-.signature-img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  object-position: center;
-  mix-blend-mode: screen;
-  transform: scale(1.15);
-  filter: grayscale(1) contrast(2.6) brightness(0.88);
-  transition: filter 0.45s ease;
-}
-
-body.light-mode .signature-img {
-  mix-blend-mode: multiply;
-  filter: grayscale(1) invert(1) contrast(3.2) brightness(1.28);
-}
-
-.signature-img.clean-alpha {
-  mix-blend-mode: normal;
-  filter: none;
-}
-
-body.light-mode .signature-img.clean-alpha {
-  mix-blend-mode: normal;
-  filter: invert(1);
-}
-
-.signature-fallback {
-  height: 30px;
-  width: auto;
-}
-
-.signature-fallback path {
-  stroke: var(--text-white);
-  transition: stroke 0.4s ease;
-}
-
-.top-right-group {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 5px;
-  position: relative;
-  z-index: 35;
-}
-
-.top-actions-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.refresh-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: var(--hamburger-bg);
-  border: 1px solid var(--card-border);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  color: var(--hamburger-color);
-  touch-action: manipulation;
-  position: relative;
-  z-index: 40;
-  transition: transform 0.15s ease, background 0.3s ease;
-}
-
-.refresh-btn:active {
-  transform: scale(0.9);
-}
-
-.refresh-btn svg {
-  width: 17px;
-  height: 17px;
-  pointer-events: none;
-  transition: transform 0.6s ease;
-}
-
-.refresh-btn.spinning svg {
-  transform: rotate(360deg);
-}
-
-.hamburger-btn {
-  width: 40px;
-  height: 36px;
-  border-radius: 10px;
-  background: var(--hamburger-bg);
-  border: 1px solid var(--card-border);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 4.5px;
-  cursor: pointer;
-  touch-action: manipulation;
-  position: relative;
-  z-index: 40;
-  transition: transform 0.15s ease, background 0.3s ease;
-}
-
-.hamburger-btn:active {
-  transform: scale(0.9);
-}
-
-.hamburger-btn span {
-  display: block;
-  width: 18px;
-  height: 2px;
-  background: var(--hamburger-color);
-  border-radius: 2px;
-  pointer-events: none;
-}
-
-.datetime-box {
-  text-align: right;
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  line-height: 1.4;
-}
-
-#dateDisplay {
-  cursor: pointer;
-  font-family: 'Inter', 'Noto Sans Arabic', sans-serif;
-  font-weight: 600;
-  padding: 2px 6px;
-  margin-right: -6px;
-  border-radius: 6px;
-  direction: ltr;
-  touch-action: manipulation;
-}
-
-#dateDisplay:active {
-  transform: scale(0.94);
-  background: var(--hamburger-bg);
-}
-
-.time-text {
-  font-family: 'Inter', sans-serif;
-  font-size: 0.84rem;
-  letter-spacing: 0.5px;
-}
-
-.menu-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  z-index: 900;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.35s ease, visibility 0.35s ease;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding: max(40px, calc(env(safe-area-inset-top, 0px) + 20px)) 20px 20px;
-  overflow-y: auto;
-}
-
-.menu-backdrop.open {
-  opacity: 1;
-  visibility: visible;
-}
-
-.menu-sheet {
-  width: 100%;
-  max-width: 370px;
-  background: var(--menu-bg);
-  border: 1.5px solid var(--menu-border);
-  border-radius: 24px;
-  padding: 20px 18px 16px;
-  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
-  transform: translateY(-25px) scale(0.95);
-  transition: transform 0.38s ease;
-  direction: rtl;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.menu-backdrop.open .menu-sheet {
-  transform: translateY(0) scale(1);
-}
-
-.menu-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--card-border);
-}
-
-.menu-title {
-  font-size: 1.05rem;
-  font-weight: 800;
-  color: var(--title-color);
-}
-
-.menu-close-btn {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  border: none;
-  background: var(--menu-item-bg);
-  color: var(--text-white);
-  font-size: 1rem;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  touch-action: manipulation;
-}
-
-.menu-item {
-  background: var(--menu-item-bg);
-  border: 1px solid var(--card-border);
-  border-radius: 14px;
-  padding: 12px 14px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-}
-
-.menu-item-text {
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--text-white);
-  line-height: 1.4;
-  flex: 1;
-}
-
-.currency-selector-box {
-  background: var(--menu-item-bg);
-  border: 1px solid var(--card-border);
-  border-radius: 14px;
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.currency-selector-label {
-  font-size: 0.9rem;
-  font-weight: 800;
-  color: var(--gold-primary);
-  text-align: right;
-}
-
-.currency-row {
-  display: flex;
-  gap: 8px;
-  width: 100%;
-}
-
-.currency-row button {
-  flex: 1;
-}
-
-.curr-select-btn {
-  background: var(--btn-bg);
-  border: 1px solid var(--card-border);
-  border-radius: 10px;
-  padding: 10px 6px;
-  font-family: 'Noto Sans Arabic', sans-serif;
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--text-white);
-  cursor: pointer;
-  text-align: center;
-  touch-action: manipulation;
-  transition: all 0.25s ease;
-}
-
-.curr-select-btn:active {
-  transform: scale(0.95);
-}
-
-.curr-select-btn.active {
-  background: linear-gradient(135deg, #ffc107, #f59e0b);
-  color: #121212;
-  border-color: transparent;
-  box-shadow: 0 4px 12px rgba(245, 166, 35, 0.35);
-  font-weight: 800;
-}
-
-.toggle-switch {
-  position: relative;
-  width: 50px;
-  height: 28px;
-  flex-shrink: 0;
-  cursor: pointer;
-  display: inline-block;
-  touch-action: manipulation;
-}
-
-.toggle-switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-  position: absolute;
-}
-
-.toggle-slider {
-  position: absolute;
-  inset: 0;
-  background-color: #555558;
-  border-radius: 34px;
-  transition: background-color 0.32s ease;
-}
-
-body.light-mode .toggle-slider {
-  background-color: #cbbba2;
-}
-
-.toggle-slider::before {
-  content: "";
-  position: absolute;
-  height: 22px;
-  width: 22px;
-  right: 3px;
-  top: 3px;
-  background-color: #ffffff;
-  border-radius: 50%;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
-  transition: transform 0.32s ease;
-}
-
-.toggle-switch input:checked + .toggle-slider {
-  background: linear-gradient(135deg, #ffc107, #f59e0b);
-  box-shadow: 0 0 12px rgba(245, 166, 35, 0.4);
-}
-
-.toggle-switch input:checked + .toggle-slider::before {
-  transform: translateX(-22px);
-}
-
-.menu-footer {
-  margin-top: 4px;
-  padding-top: 8px;
-  border-top: 1px solid var(--card-border);
-  text-align: center;
-  font-family: 'Inter', sans-serif;
-  font-size: 0.76rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  direction: ltr;
-}
-
-.rate-header {
-  text-align: center;
-  margin: 0 0 6px;
-}
-
-.rate-title {
-  font-size: 1.8rem;
-  font-weight: 800;
-  color: var(--title-color);
-  text-shadow: 0 0 18px var(--gold-glow);
-  margin-bottom: 4px;
-  line-height: 1.3;
-}
-
-.rate-banner {
-  direction: ltr;
-  font-family: 'Inter', 'Noto Sans Arabic', sans-serif;
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--rate-color);
-  text-shadow: 0 0 20px var(--gold-glow);
-  letter-spacing: 0.5px;
-  line-height: 1.35;
-  transition: transform 0.25s ease;
-}
-
-.rate-banner.pulse {
-  transform: scale(1.06);
-}
-
-.converter-section {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  margin-bottom: 8px;
-}
-
-.currency-card {
-  background: var(--card-bg);
-  border: 1.5px solid var(--card-border);
-  border-radius: 20px;
-  padding: 18px 22px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  direction: ltr;
-  box-shadow: var(--card-shadow);
-}
-
-.currency-card.active-input {
-  border-color: var(--card-active-border);
-}
-
-.amount-display {
-  font-family: 'Inter', sans-serif;
-  font-size: 2.1rem;
-  font-weight: 600;
-  color: var(--text-white);
-  overflow-x: auto;
-  white-space: nowrap;
-  max-width: 70%;
-  scrollbar-width: none;
-}
-
-.amount-display::-webkit-scrollbar {
-  display: none;
-}
-
-.currency-info {
-  text-align: right;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-}
-
-.currency-name {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--gold-primary);
-  text-shadow: 0 0 10px var(--gold-glow);
-  line-height: 1.25;
-}
-
-.currency-symbol {
-  font-family: 'Inter', sans-serif;
-  font-size: 1.3rem;
-  font-weight: 600;
-  color: var(--gold-primary);
-  margin-top: 2px;
-}
-
-.swap-btn {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  background: var(--swap-bg);
-  border: none;
-  box-shadow: var(--swap-shadow);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  z-index: 5;
-  transition: transform 0.2s ease;
-}
-
-.swap-btn.pressed {
-  transform: translate(-50%, -50%) scale(0.9) rotate(180deg);
-}
-
-.swap-btn svg {
-  width: 24px;
-  height: 24px;
-  stroke: var(--swap-icon);
-  stroke-width: 2.2;
-}
-
-.keypad {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px 24px;
-  direction: ltr;
-  padding: 4px 12px;
-}
-
-.key-btn {
-  background: var(--btn-bg);
-  border: 1px solid var(--btn-border);
-  border-radius: 16px;
-  height: 58px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-family: 'Inter', sans-serif;
-  font-size: 1.65rem;
-  font-weight: 500;
-  color: var(--btn-text);
-  box-shadow: var(--btn-shadow);
-  cursor: pointer;
-  transition: transform 0.06s ease;
-}
-
-.key-btn.pressed {
-  background: var(--btn-active);
-  transform: scale(0.94);
-}
-
-.key-btn.transparent {
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  font-size: 2rem;
-}
-
-.key-btn.transparent.pressed {
-  background: rgba(128, 128, 128, 0.12);
-}
-
-.key-btn svg path {
-  stroke: var(--btn-text);
-}
-
-/* هاوتاکردنی قەبارەی نووسین و پێکهاتەکانی ئەندرۆید لەگەڵ ئایفۆن */
-body.android-device .rate-title {
-  font-size: 1.62rem;
-}
-
-body.android-device .rate-banner {
-  font-size: 1.35rem;
-}
-
-body.android-device .amount-display {
-  font-size: 1.92rem;
-}
-
-body.android-device .currency-name {
-  font-size: 1.12rem;
-}
-
-body.android-device .currency-symbol {
-  font-size: 1.16rem;
-}
-
-body.android-device .currency-card {
-  padding: 15px 20px;
-}
-
-body.android-device .key-btn {
-  height: 54px;
-  font-size: 1.52rem;
-}
-
-body.android-device .menu-item-text,
-body.android-device .currency-selector-label {
-  font-size: 0.84rem;
-}
-
-body.android-device .curr-select-btn {
-  font-size: 0.8rem;
-  padding: 9px 5px;
-}
+<!DOCTYPE html>
+<html lang="ku" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Exchange App">
+  <meta id="themeColorMeta" name="theme-color" content="#111615">
+  <title>نرخی دراوەکان - Exchange App</title>
+
+  <!-- Preload بۆ وێنەی ئینترۆ و ئایکۆن تاکو دەستبەجێ بار ببن -->
+  <link rel="preload" as="image" href="IMG_6165.jpg">
+  <link rel="preload" as="image" href="IMG_6165.jpeg">
+  <link rel="preload" as="image" href="IMG_6071.JPG">
+
+  <!-- Critical Inline CSS بۆ بنەبڕکردنی شاشەی سپی لە سەرەتای کرانەوەدا -->
+  <style id="critical-inline-css">
+    :root {
+      --safe-bg-color: #111615;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      min-height: 100dvh;
+      background-color: #111615;
+      overflow: hidden;
+      -webkit-text-size-adjust: 100%;
+      -moz-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+    }
+    .intro-overlay {
+      position: fixed;
+      top: calc(-1 * env(safe-area-inset-top, 0px));
+      left: 0;
+      right: 0;
+      bottom: calc(-1 * env(safe-area-inset-bottom, 0px));
+      width: 100vw;
+      height: calc(100dvh + env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px));
+      background-color: #111615;
+      z-index: 9999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: opacity 0.65s ease, visibility 0.65s ease;
+    }
+    .intro-overlay.hide {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .intro-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  </style>
+
+  <!-- ئایکۆنی بەرنامەکە -->
+  <link id="faviconLink" rel="icon" type="image/jpeg" href="IMG_6140.jpg">
+  <link id="appleIconLink" rel="apple-touch-icon" href="IMG_6140.jpg">
+
+  <!-- فایلی دیزاین -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- شاشەی ئینترۆ (IMG_6165) -->
+  <div id="introOverlay" class="intro-overlay">
+    <img id="introImg" class="intro-img" src="IMG_6165.jpg" alt="Exchange App Intro" decoding="sync" fetchpriority="high">
+  </div>
+
+  <!-- پەڕەی مۆدێرنی ناو Hamburger Icon -->
+  <div id="menuBackdrop" class="menu-backdrop">
+    <div class="menu-sheet" id="menuSheet">
+      <div class="menu-header">
+        <span class="menu-title">ڕێکخستنەکان</span>
+        <button id="menuCloseBtn" class="menu-close-btn" type="button" aria-label="Close">✕</button>
+      </div>
+
+      <!-- دەستەواژەی یەکەم: ڕاست = کوژاوە (Off) | چەپ = کارا (On) -->
+      <div class="menu-item">
+        <div class="menu-item-text">کاراکردنی ١٠٠٠دینار کەمتر بۆ وەرگرتنی دۆلار</div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="discountToggle">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <!-- دەستەواژەی دووەم: ڕاست = کوژاوە (Off) | چەپ = کارا (On) -->
+      <div class="menu-item">
+        <div class="menu-item-text">دۆخی تاریك</div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="darkModeToggle" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <!-- بەشی هەڵبژاردنی دراوەکان (٣ لە سەرەوە + ٢ لە خوارەوە) -->
+      <div class="currency-selector-box">
+        <div class="currency-selector-label">هەڵبژاردنی دراو</div>
+        <div class="currency-row top-row">
+          <button class="curr-select-btn active" type="button" data-curr="USD">دۆلار</button>
+          <button class="curr-select-btn" type="button" data-curr="GBP">پاوەند</button>
+          <button class="curr-select-btn" type="button" data-curr="EUR">یۆرۆ</button>
+        </div>
+        <div class="currency-row bottom-row">
+          <button class="curr-select-btn" type="button" data-curr="TRY">لیرەی تورکی</button>
+          <button class="curr-select-btn" type="button" data-curr="IRR">تمەنی ئێرانی</button>
+        </div>
+      </div>
+
+      <!-- بەشی خوارەوەی لیستەکە -->
+      <div class="menu-footer">Developed by (Didar Ahmad)</div>
+    </div>
+  </div>
+
+  <div class="app-container">
+    <div class="top-bar">
+      <!-- لینکی واتسئەپ لەسەر واژووەکەت (IMG_6071) -->
+      <a href="https://wa.me/9647700068269" target="_blank" rel="noopener noreferrer" class="signature-link" title="پەیوەندی لە ڕێگەی واتسئەپ">
+        <img id="signatureImg" class="signature-img" alt="Didar Ahmad Signature" style="display: none;">
+        <svg id="fallbackSig" class="signature-fallback" viewBox="0 0 140 50" fill="none">
+          <path d="M15 38C8 35 12 18 28 14C40 11 35 32 20 36C12 38 45 22 52 12C55 18 48 32 52 34C58 36 68 18 75 10C72 22 68 35 72 38C78 40 92 22 105 20C95 24 85 28 125 22" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+
+      <!-- بەشی لای ڕاست: Hamburger و Refresh لە سەروو بەروارەکە -->
+      <div class="top-right-group">
+        <div class="top-actions-row">
+          <button id="refreshBtn" class="refresh-btn" type="button" aria-label="Refresh" title="نوێکردنەوەی نرخەکان">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M3 3v5h5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M21 21v-5h-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+
+          <button id="hamburgerBtn" class="hamburger-btn" type="button" aria-label="Menu">
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+        </div>
+
+        <div class="datetime-box">
+          <div id="dateDisplay" title="گرتە بکە بۆ بینینی ڕۆژ">...</div>
+          <div id="timeDisplay" class="time-text">...</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rate-header">
+      <h1 id="rateTitle" class="rate-title">نرخی دۆلار</h1>
+      <div id="liveRateBanner" class="rate-banner">100$ = 168,150 دینار</div>
+    </div>
+
+    <div class="converter-section">
+      <div class="currency-card active-input">
+        <div id="topAmount" class="amount-display">0</div>
+        <div class="currency-info">
+          <span id="topName" class="currency-name">دۆلار</span>
+          <span id="topSymbol" class="currency-symbol">$</span>
+        </div>
+      </div>
+
+      <button id="swapBtn" class="swap-btn" type="button" aria-label="Swap">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M7 20V4M7 4L3 8M7 4L11 8M17 4V20M17 20L21 16M17 20L13 16" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+
+      <div class="currency-card">
+        <div id="bottomAmount" class="amount-display">0</div>
+        <div class="currency-info">
+          <span id="bottomName" class="currency-name">دینار</span>
+          <span id="bottomSymbol" class="currency-symbol">IQD</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="keypad" id="keypad">
+      <button class="key-btn" type="button" data-key="7">7</button>
+      <button class="key-btn" type="button" data-key="8">8</button>
+      <button class="key-btn" type="button" data-key="9">9</button>
+      <button class="key-btn" type="button" data-key="4">4</button>
+      <button class="key-btn" type="button" data-key="5">5</button>
+      <button class="key-btn" type="button" data-key="6">6</button>
+      <button class="key-btn" type="button" data-key="1">1</button>
+      <button class="key-btn" type="button" data-key="2">2</button>
+      <button class="key-btn" type="button" data-key="3">3</button>
+      <button class="key-btn transparent" type="button" data-key=".">.</button>
+      <button class="key-btn" type="button" data-key="0">0</button>
+      <button class="key-btn transparent" type="button" data-key="BACKSPACE">
+        <svg width="28" height="22" viewBox="0 0 28 22" fill="none">
+          <path d="M10 2L2 11L10 20H25C25.5523 20 26 19.5523 26 19V3C26 2.44772 25.5523 2 25 2H10Z" stroke="#f5a623" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M15 8L21 14M21 8L15 14" stroke="#f5a623" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- فایلی جاڤاسکریپت -->
+  <script src="script.js" defer></script>
+</body>
+</html>
