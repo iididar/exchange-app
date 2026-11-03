@@ -1,4 +1,41 @@
 // =====================================================
+// ٠. ڕێکخستنی قەبارەی فۆنت لە ئەندرۆید تا بە هەمان قەبارەی ئایفۆن بێت
+// =====================================================
+function normalizeTypographyForDevice() {
+  const ua = navigator.userAgent || '';
+  const isAndroid = /Android/i.test(ua);
+  const docEl = document.documentElement;
+
+  if (isAndroid) {
+    document.body.classList.add('android-device');
+  }
+
+  // پێوانەکردنی گەورەکردنی دەسکردی فۆنت لەلایەن سیستەمی ئەندرۆیدەوە
+  const probe = document.createElement('div');
+  probe.style.cssText = 'position:absolute;visibility:hidden;font-size:16px;width:0;height:0;';
+  document.body.appendChild(probe);
+  const renderedPx = parseFloat(window.getComputedStyle(probe).fontSize) || 16;
+  document.body.removeChild(probe);
+
+  const systemFontBoost = renderedPx / 16;
+  const vw = Math.min(window.innerWidth || 390, 430);
+
+  if (isAndroid) {
+    // هاوتاکردنی قەبارەی بنەڕەتی لەسەر ئەندرۆید بەرامبەر ئایفۆن (390px)
+    const targetPx = Math.min(15.2, Math.max(13.2, (vw / 390) * 14.8));
+    const compensatedPx = targetPx / (systemFontBoost > 1.01 ? systemFontBoost : 1);
+    docEl.style.fontSize = `${compensatedPx.toFixed(2)}px`;
+  } else if (systemFontBoost > 1.02) {
+    docEl.style.fontSize = `${(16 / systemFontBoost).toFixed(2)}px`;
+  } else {
+    docEl.style.fontSize = '16px';
+  }
+}
+
+normalizeTypographyForDevice();
+window.addEventListener('resize', normalizeTypographyForDevice);
+
+// =====================================================
 // ١. قفڵکردنی Zoom، کلیکی ڕاست و پشکنینی کۆد (Security)
 // =====================================================
 document.addEventListener('contextmenu', (e) => e.preventDefault());
@@ -24,16 +61,34 @@ let lastTouchEnd = 0;
 document.addEventListener('touchend', (e) => {
   const now = Date.now();
   if (now - lastTouchEnd <= 400) {
-    e.preventDefault();
+    if (!e.target.closest('button, a, label, input, #dateDisplay')) {
+      e.preventDefault();
+    }
   }
   lastTouchEnd = now;
 }, { passive: false });
 
 // =====================================================
-// ٢. بارکردنی خێرای وێنەکان (.jpeg لە پێشەوەیە)
+// ٢. هاوتاوهەمانکردنی ڕەنگی بنەڕەتی و بەشی Home Indicator
+// =====================================================
+const themeColorMeta = document.getElementById('themeColorMeta');
+let isIntroActive = true;
+
+function syncSafeAreaThemeColor() {
+  const isDark = !document.body.classList.contains('light-mode');
+  const targetColor = isIntroActive ? '#111615' : (isDark ? '#0d0d0d' : '#f2dec0');
+  document.documentElement.style.backgroundColor = targetColor;
+  document.body.style.backgroundColor = targetColor;
+  if (themeColorMeta) {
+    themeColorMeta.setAttribute('content', targetColor);
+  }
+}
+
+// =====================================================
+// ٣. بارکردنی خێرای وێنەکان (.jpg و .JPG و .jpeg لە پێشەوەن)
 // =====================================================
 function resolveImageFile(baseName, onSuccess, onFail) {
-  const extensions = ['.jpeg', '.JPEG', '.PNG', '.png', '.JPG', '.jpg', '.webp', ''];
+  const extensions = ['.jpg', '.JPG', '.jpeg', '.JPEG', '.png', '.PNG', '.webp', ''];
   let idx = 0;
 
   function tryNext() {
@@ -50,7 +105,6 @@ function resolveImageFile(baseName, onSuccess, onFail) {
   tryNext();
 }
 
-// پاککردنەوەی تەواوەتی باگراوندی واژووەکە (کردنی بە شەفاف)
 function removeSignatureBackground(imgElement, loadedImg) {
   try {
     const canvas = document.createElement('canvas');
@@ -100,25 +154,34 @@ resolveImageFile('IMG_6071', (validPath, loadedImg) => {
 
 const introOverlayEl = document.getElementById('introOverlay');
 const introImgEl = document.getElementById('introImg');
+
+function finishIntroScreen() {
+  if (!isIntroActive) return;
+  isIntroActive = false;
+  introOverlayEl.classList.add('hide');
+  syncSafeAreaThemeColor();
+}
+
 resolveImageFile(
   'IMG_6165',
   (validPath) => {
-    introImgEl.src = validPath;
+    if (introImgEl.getAttribute('src') !== validPath) {
+      introImgEl.src = validPath;
+    }
     introImgEl.style.display = 'block';
-    setTimeout(() => {
-      introOverlayEl.classList.add('hide');
-    }, 2300);
+    setTimeout(finishIntroScreen, 2300);
   },
   () => {
-    introOverlayEl.classList.add('hide');
+    finishIntroScreen();
   }
 );
 
 // =====================================================
-// ٣. سیستمی حاسیبە، دراوەکان و ڕێکخستنەکان
+// ٤. سیستمی حاسیبە، دراوەکان و ڕێکخستنەکان
 // =====================================================
 const TARGET_CHANNEL = 'PMCgroup';
 const XEIOD_API_URL = 'https://xeiqd.com/rates.json';
+const RUDAW_INDEX_URL = 'https://rudawindex.net';
 
 const KURDISH_DAYS = [
   'یەک شەممە',
@@ -130,7 +193,6 @@ const KURDISH_DAYS = [
   'شەممە'
 ];
 
-// زانیارییەکانی هەر ٥ دراوەکە
 const CURRENCY_META = {
   USD: { title: 'نرخی دۆلار', name: 'دۆلار', symbol: '$' },
   GBP: { title: 'نرخی پاوەند', name: 'پاوەند', symbol: '£' },
@@ -142,17 +204,29 @@ const CURRENCY_META = {
 const savedDarkPref = localStorage.getItem('darkMode');
 const initialDarkMode = savedDarkPref !== null ? savedDarkPref === 'true' : true;
 
+let cachedXeiqdJson = null;
+try {
+  const savedJson = localStorage.getItem('cachedXeiqdJson');
+  if (savedJson) cachedXeiqdJson = JSON.parse(savedJson);
+} catch (e) {}
+
+let cachedRudawBuyObj = null;
+try {
+  const savedRudaw = localStorage.getItem('cachedRudawBuyObj');
+  if (savedRudaw) cachedRudawBuyObj = JSON.parse(savedRudaw);
+} catch (e) {}
+
 const state = {
-  // هەمیشە لە کاتی کردنەوەی وێبسایتەکەدا ڕاستەوخۆ دۆلار هەڵبژێردراوە
   selectedCurrency: 'USD',
   baseRatePer100USD: Number(localStorage.getItem('savedRate')) || 168000,
   otherRates: {
-    GBP: Number(localStorage.getItem('rate_GBP')) || 225000,   // نرخی ١٠٠ پاوەند بە دینار
-    EUR: Number(localStorage.getItem('rate_EUR')) || 185000,   // نرخی ١٠٠ یۆرۆ بە دینار
-    TRY: Number(localStorage.getItem('rate_TRY')) || 33682,    // نرخی ١٠٠٠ لیرە بە دینار
-    IRR: Number(localStorage.getItem('rate_IRR')) || 59435364  // نرخی ١٠٠,٠٠٠ دینار بە تمەن
+    GBP: Number(localStorage.getItem('rate_GBP')) || 225000,
+    EUR: Number(localStorage.getItem('rate_EUR')) || 185000,
+    TRY: Number(localStorage.getItem('rate_TRY')) || 33682,
+    IRR: Number(localStorage.getItem('rate_IRR')) || 59435364
   },
-  lastTimestamp: Number(localStorage.getItem('savedTime')) || Date.now(),
+  // بەروار و کاتژمێر تەنها و تەنها پەیوەستن بە کۆتا نرخی دۆلاری کەناڵی تێلێگرامی PMC
+  pmcTimestamp: Number(localStorage.getItem('savedPmcTime')) || Number(localStorage.getItem('savedTime')) || 0,
   isTopForeign: true,
   rawInput: '0',
   minus1000Active: localStorage.getItem('minus1000Active') === 'true',
@@ -181,18 +255,17 @@ const discountToggle = document.getElementById('discountToggle');
 const darkModeToggle = document.getElementById('darkModeToggle');
 const currSelectBtns = document.querySelectorAll('.curr-select-btn');
 
-// جێگیرکردنی دۆخی سەرەتایی دوگمەکان
 discountToggle.checked = state.minus1000Active;
 darkModeToggle.checked = state.isDarkMode;
 if (!state.isDarkMode) {
   document.body.classList.add('light-mode');
 }
+syncSafeAreaThemeColor();
 
 function getEffectiveUsdRate() {
   return state.minus1000Active ? (state.baseRatePer100USD - 1000) : state.baseRatePer100USD;
 }
 
-// فۆرماتکردنی ژمارە بەبێ کێشەی ژمارەی زۆر گەورە (بەتایبەت بۆ تمەن)
 function formatNumber(numStr, maxDecimals = 2) {
   if (!numStr || numStr === '0') return '0';
   let str = numStr.toString();
@@ -222,9 +295,26 @@ function formatRoundedInteger(val) {
   }
 }
 
+function adjustAmountFontSize(el, formattedText) {
+  const len = formattedText.length;
+  if (len > 19) {
+    el.style.fontSize = '1.15rem';
+  } else if (len > 15) {
+    el.style.fontSize = '1.38rem';
+  } else if (len > 12) {
+    el.style.fontSize = '1.68rem';
+  } else {
+    el.style.fontSize = '';
+  }
+}
+
 function normalizeDigits(str) {
-  const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-  return str.replace(/[٠-٩]/g, d => arabicNumbers.indexOf(d));
+  if (!str) return '';
+  const arabicIndic = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+  const easternArabic = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+  return String(str)
+    .replace(/[٠-٩]/g, (d) => arabicIndic.indexOf(d))
+    .replace(/[۰-۹]/g, (d) => easternArabic.indexOf(d));
 }
 
 function extractExchangeRate(text) {
@@ -240,8 +330,17 @@ function extractExchangeRate(text) {
   return null;
 }
 
+// پیشاندانی بەروار و کاتژمێر تەنها لەسەر بنەمای کۆتا پۆستی نرخی دۆلاری PMC
 function renderDateOrDay() {
-  const postDate = new Date(state.lastTimestamp);
+  if (!state.pmcTimestamp || state.pmcTimestamp <= 0) {
+    dateDisplayEl.textContent = '--/----/--';
+    timeDisplayEl.textContent = '--:--';
+    return;
+  }
+
+  const postDate = new Date(state.pmcTimestamp);
+  if (isNaN(postDate.getTime())) return;
+
   if (state.showDayName) {
     dateDisplayEl.textContent = KURDISH_DAYS[postDate.getDay()];
   } else {
@@ -258,7 +357,6 @@ function renderDateOrDay() {
   });
 }
 
-// نوێکردنەوەی ناونیشان و بانەری نرخ بەپێی دراوی هەڵبژێردراو
 function renderRateBanner(animate = false) {
   const curr = state.selectedCurrency;
   const meta = CURRENCY_META[curr];
@@ -266,15 +364,15 @@ function renderRateBanner(animate = false) {
 
   if (curr === 'USD') {
     const effectiveUsd = getEffectiveUsdRate();
-    liveRateBannerEl.textContent = `100$ \u200E=\u200E ${formatRoundedInteger(effectiveUsd)} دینار`;
+    liveRateBannerEl.textContent = `\u2066100$\u2069 = \u2066${formatRoundedInteger(effectiveUsd)} دینار\u2069`;
   } else if (curr === 'GBP') {
-    liveRateBannerEl.textContent = `100£ \u200E=\u200E ${formatRoundedInteger(state.otherRates.GBP)} دینار`;
+    liveRateBannerEl.textContent = `\u2066100£\u2069 = \u2066${formatRoundedInteger(state.otherRates.GBP)} دینار\u2069`;
   } else if (curr === 'EUR') {
-    liveRateBannerEl.textContent = `100€ \u200E=\u200E ${formatRoundedInteger(state.otherRates.EUR)} دینار`;
+    liveRateBannerEl.textContent = `\u2066100€\u2069 = \u2066${formatRoundedInteger(state.otherRates.EUR)} دینار\u2069`;
   } else if (curr === 'TRY') {
-    liveRateBannerEl.textContent = `1000 لیرە \u200E=\u200E ${formatRoundedInteger(state.otherRates.TRY)} دینار`;
+    liveRateBannerEl.textContent = `\u20661000 لیرە\u2069 = \u2066${formatRoundedInteger(state.otherRates.TRY)} دینار\u2069`;
   } else if (curr === 'IRR') {
-    liveRateBannerEl.textContent = `100,000 دینار \u200E=\u200E ${formatRoundedInteger(state.otherRates.IRR)} تمەن`;
+    liveRateBannerEl.textContent = `\u2066100,000 دینار\u2069 = \u2066${formatRoundedInteger(state.otherRates.IRR)} تمەن\u2069`;
   }
 
   if (animate) {
@@ -283,7 +381,6 @@ function renderRateBanner(animate = false) {
   }
 }
 
-// نوێکردنەوەی ناوی دراوەکان لەسەر هەردوو کارتی حاسیبەکە
 function renderConverterLabels() {
   const meta = CURRENCY_META[state.selectedCurrency];
   if (state.isTopForeign) {
@@ -299,81 +396,114 @@ function renderConverterLabels() {
   }
 }
 
-// هەژمارکردنی ورد بۆ هەر ٥ دراوەکە
 function calculateAndRender() {
-  topAmountEl.textContent = formatNumber(state.rawInput, 4);
+  const formattedTop = formatNumber(state.rawInput, 4);
+  topAmountEl.textContent = formattedTop;
+  adjustAmountFontSize(topAmountEl, formattedTop);
   topAmountEl.scrollLeft = topAmountEl.scrollWidth;
 
   const inputValue = parseFloat(state.rawInput);
   if (isNaN(inputValue) || inputValue === 0) {
     bottomAmountEl.textContent = '0';
+    adjustAmountFontSize(bottomAmountEl, '0');
     return;
   }
 
   const curr = state.selectedCurrency;
-  let result = 0;
+  let bottomText = '0';
 
   if (curr === 'USD') {
     const rate = getEffectiveUsdRate();
     if (state.isTopForeign) {
-      result = (inputValue * rate) / 100;
-      bottomAmountEl.textContent = formatRoundedInteger(result);
+      const result = (inputValue * rate) / 100;
+      bottomText = formatRoundedInteger(result);
     } else {
-      result = (inputValue / rate) * 100;
+      const result = (inputValue / rate) * 100;
       const formatted = Number.isInteger(result) ? result.toString() : result.toFixed(2).replace(/\.?0+$/, '');
-      bottomAmountEl.textContent = formatNumber(formatted, 2);
+      bottomText = formatNumber(formatted, 2);
     }
   } else if (curr === 'GBP' || curr === 'EUR') {
     const rate = state.otherRates[curr];
     if (state.isTopForeign) {
-      result = (inputValue * rate) / 100;
-      bottomAmountEl.textContent = formatRoundedInteger(result);
+      const result = (inputValue * rate) / 100;
+      bottomText = formatRoundedInteger(result);
     } else {
-      result = (inputValue / rate) * 100;
+      const result = (inputValue / rate) * 100;
       const formatted = Number.isInteger(result) ? result.toString() : result.toFixed(2).replace(/\.?0+$/, '');
-      bottomAmountEl.textContent = formatNumber(formatted, 2);
+      bottomText = formatNumber(formatted, 2);
     }
   } else if (curr === 'TRY') {
     const ratePer1000 = state.otherRates.TRY;
     if (state.isTopForeign) {
-      // لیرە بۆ دینار (١٠٠٠ لیرە جێگیرە)
-      result = (inputValue * ratePer1000) / 1000;
-      bottomAmountEl.textContent = formatRoundedInteger(result);
+      const result = (inputValue * ratePer1000) / 1000;
+      bottomText = formatRoundedInteger(result);
     } else {
-      // دینار بۆ لیرە
-      result = (inputValue / ratePer1000) * 1000;
+      const result = (inputValue / ratePer1000) * 1000;
       const formatted = Number.isInteger(result) ? result.toString() : result.toFixed(2).replace(/\.?0+$/, '');
-      bottomAmountEl.textContent = formatNumber(formatted, 2);
+      bottomText = formatNumber(formatted, 2);
     }
   } else if (curr === 'IRR') {
-    const tomanPer100kIQD = state.otherRates.IRR;
-    if (state.isTopForeign) {
-      // تمەن بۆ دینار
-      result = (inputValue / tomanPer100kIQD) * 100000;
-      bottomAmountEl.textContent = formatRoundedInteger(result);
+    const tomanPer100k = Math.round(state.otherRates.IRR);
+
+    if (!state.rawInput.includes('.') && tomanPer100k > 0) {
+      try {
+        const inputBig = BigInt(state.rawInput);
+        const rateBig = BigInt(tomanPer100k);
+
+        if (state.isTopForeign) {
+          const resBig = (inputBig * 100000n + rateBig / 2n) / rateBig;
+          bottomText = formatNumber(resBig.toString(), 0);
+        } else {
+          const resBig = (inputBig * rateBig + 50000n) / 100000n;
+          bottomText = formatNumber(resBig.toString(), 0);
+        }
+      } catch (e) {
+        const result = state.isTopForeign
+          ? (inputValue / tomanPer100k) * 100000
+          : (inputValue * tomanPer100k) / 100000;
+        bottomText = formatRoundedInteger(result);
+      }
     } else {
-      // دینار بۆ تمەن (١٠٠,٠٠٠ دینار جێگیرە)
-      result = (inputValue * tomanPer100kIQD) / 100000;
-      bottomAmountEl.textContent = formatRoundedInteger(result);
+      const result = state.isTopForeign
+        ? (inputValue / tomanPer100k) * 100000
+        : (inputValue * tomanPer100k) / 100000;
+      bottomText = formatRoundedInteger(result);
     }
   }
 
+  bottomAmountEl.textContent = bottomText;
+  adjustAmountFontSize(bottomAmountEl, bottomText);
   bottomAmountEl.scrollLeft = bottomAmountEl.scrollWidth;
 }
 
-function updateLiveRate(newBaseRate, timestampMs) {
-  const isChanged = state.baseRatePer100USD !== newBaseRate || state.lastTimestamp !== timestampMs;
+// نوێکردنەوەی نرخی دۆلار و کاتی تێلێگرام + نوێکردنەوەی دراوەکانی تر بەپێی دۆلارەکە
+function updateLiveRateFromPMC(newBaseRate, pmcPostTimestampMs) {
+  const isChanged =
+    state.baseRatePer100USD !== newBaseRate ||
+    (pmcPostTimestampMs > 0 && state.pmcTimestamp !== pmcPostTimestampMs);
+
   state.baseRatePer100USD = newBaseRate;
-  state.lastTimestamp = timestampMs;
   localStorage.setItem('savedRate', newBaseRate);
-  localStorage.setItem('savedTime', timestampMs);
+
+  if (pmcPostTimestampMs && pmcPostTimestampMs > 0) {
+    state.pmcTimestamp = pmcPostTimestampMs;
+    localStorage.setItem('savedPmcTime', pmcPostTimestampMs);
+    localStorage.setItem('savedTime', pmcPostTimestampMs);
+  }
+
+  // دراوەکانی تریش لەسەر گۆڕانکاریی دۆلاری تێلێگرامەکە نوێ دەکرێنەوە
+  if (cachedXeiqdJson) {
+    applyXeiqdRates(cachedXeiqdJson);
+  }
+  if (cachedRudawBuyObj) {
+    applyRudawTomanRate(cachedRudawBuyObj);
+  }
 
   renderRateBanner(isChanged);
   renderDateOrDay();
   calculateAndRender();
 }
 
-// هەڵبژاردنی دراوەکان لەناو مێنۆی Hamburger
 currSelectBtns.forEach((btn) => {
   btn.addEventListener('click', () => {
     const chosen = btn.dataset.curr;
@@ -390,7 +520,6 @@ currSelectBtns.forEach((btn) => {
     renderRateBanner(true);
     calculateAndRender();
 
-    // داخستنی نەرمی مێنۆکە دوای هەڵبژاردن
     setTimeout(() => {
       menuBackdrop.classList.remove('open');
     }, 140);
@@ -402,9 +531,16 @@ dateDisplayEl.addEventListener('click', () => {
   renderDateOrDay();
 });
 
-hamburgerBtn.addEventListener('click', () => {
+function openMenuSheet(e) {
+  if (e) e.stopPropagation();
   menuBackdrop.classList.add('open');
-});
+}
+
+hamburgerBtn.addEventListener('click', openMenuSheet);
+hamburgerBtn.addEventListener('touchend', (e) => {
+  e.preventDefault();
+  openMenuSheet(e);
+}, { passive: false });
 
 menuCloseBtn.addEventListener('click', () => {
   menuBackdrop.classList.remove('open');
@@ -431,24 +567,31 @@ darkModeToggle.addEventListener('change', (e) => {
   } else {
     document.body.classList.add('light-mode');
   }
+  syncSafeAreaThemeColor();
 });
 
-// دوگمەی Refresh لە تەنیشت Hamburger
-refreshBtn.addEventListener('click', async () => {
+async function triggerManualRefresh(e) {
+  if (e) e.stopPropagation();
   refreshBtn.classList.add('spinning');
   await Promise.allSettled([
     fetchPublicChannelPMC(true),
-    fetchRatesFromXeiqd(true)
+    fetchRatesFromXeiqd(true),
+    fetchTomanFromRudaw(true)
   ]);
   renderRateBanner(true);
   setTimeout(() => {
     refreshBtn.classList.remove('spinning');
   }, 600);
-});
+}
+
+refreshBtn.addEventListener('click', triggerManualRefresh);
+refreshBtn.addEventListener('touchend', (e) => {
+  e.preventDefault();
+  triggerManualRefresh(e);
+}, { passive: false });
 
 function handleKeyPress(key) {
-  // تەنها بۆ تمەن تا ١٨ ژمارە ڕێگەپێدراوە (زیاتر لە ١٤ ژمارە)، بۆ ئەوانی تر ١٢ ژمارە
-  const maxAllowedDigits = state.selectedCurrency === 'IRR' ? 18 : 12;
+  const maxAllowedDigits = state.selectedCurrency === 'IRR' ? 20 : 12;
 
   if (key === 'BACKSPACE') {
     state.rawInput = state.rawInput.length > 1 ? state.rawInput.slice(0, -1) : '0';
@@ -504,16 +647,31 @@ swapBtn.addEventListener('touchend', () => {
 swapBtn.addEventListener('mousedown', toggleSwap);
 
 // =====================================================
-// ٤. وەرگرتنی نرخی (پاوەند، یۆرۆ، لیرە، تمەن) لە xeiqd.com/rates.json
+// ٥. وەرگرتنی نرخی (پاوەند، یۆرۆ، لیرە) لە xeiqd.com/rates.json
 // =====================================================
 function extractNumericRate(obj, keys) {
   if (!obj || typeof obj !== 'object') return null;
-  const sources = [obj.rates, obj.data, obj.currencies, obj];
+  const sources = [obj.rates, obj.data, obj.currencies, obj.usd, obj.iqd, obj];
 
   for (const src of sources) {
     if (!src || typeof src !== 'object') continue;
+
+    if (Array.isArray(src)) {
+      for (const item of src) {
+        if (!item || typeof item !== 'object') continue;
+        const code = String(item.code || item.currency || item.symbol || item.name || '').toUpperCase();
+        if (keys.includes(code)) {
+          const v = item.rate ?? item.sell ?? item.price ?? item.value ?? item.buy;
+          const parsed = parseFloat(String(v).replace(/,/g, ''));
+          if (!isNaN(parsed) && parsed > 0) return parsed;
+        }
+      }
+      continue;
+    }
+
     for (const k of Object.keys(src)) {
-      if (keys.includes(k.toUpperCase())) {
+      const upperK = k.toUpperCase();
+      if (keys.includes(upperK) || keys.some((target) => upperK === `USD_${target}` || upperK === `${target}_IQD`)) {
         const val = src[k];
         if (typeof val === 'number' && val > 0) return val;
         if (typeof val === 'string') {
@@ -532,18 +690,22 @@ function extractNumericRate(obj, keys) {
 }
 
 function applyXeiqdRates(jsonData) {
-  if (!jsonData) return false;
+  if (!jsonData || typeof jsonData !== 'object') return false;
+
+  cachedXeiqdJson = jsonData;
+  try {
+    localStorage.setItem('cachedXeiqdJson', JSON.stringify(jsonData));
+  } catch (e) {}
 
   const rawGBP = extractNumericRate(jsonData, ['GBP', 'POUND']);
   const rawEUR = extractNumericRate(jsonData, ['EUR', 'EURO']);
   const rawTRY = extractNumericRate(jsonData, ['TRY', 'TRL', 'LIRA']);
-  const rawIRR = extractNumericRate(jsonData, ['IRR', 'IRT', 'TOMAN', 'TMN']);
 
-  const usdBase100 = state.baseRatePer100USD; // نرخی ١٠٠ دۆلار لە تێلێگرامەوە
+  const usdBase100 = state.baseRatePer100USD;
   const isUsdRelativeJson = rawGBP !== null && rawGBP < 10;
   let updated = false;
 
-  // ١. پاوەند (نرخی ١٠٠ پاوەند بە دینار)
+  // ١. پاوەند
   if (rawGBP) {
     let gbp100 = state.otherRates.GBP;
     if (rawGBP > 50000) {
@@ -564,7 +726,7 @@ function applyXeiqdRates(jsonData) {
     }
   }
 
-  // ٢. یۆرۆ (نرخی ١٠٠ یۆرۆ بە دینار)
+  // ٢. یۆرۆ
   if (rawEUR) {
     let eur100 = state.otherRates.EUR;
     if (rawEUR > 50000) {
@@ -574,7 +736,6 @@ function applyXeiqdRates(jsonData) {
     } else if (rawEUR > 50) {
       eur100 = Math.round((rawEUR / 100) * usdBase100);
     } else if (rawGBP && rawGBP < 1) {
-      // کاتێک نرخەکان بەرامبەر ١ دۆلارن
       eur100 = Math.round(usdBase100 / rawEUR);
     } else if (rawEUR >= 1) {
       eur100 = Math.round(rawEUR * usdBase100);
@@ -588,7 +749,7 @@ function applyXeiqdRates(jsonData) {
     }
   }
 
-  // ٣. لیرەی تورکی (نرخی ١٠٠٠ لیرە بە دینار)
+  // ٣. لیرەی تورکی
   if (rawTRY) {
     let try1000 = state.otherRates.TRY;
     if (rawTRY > 10000) {
@@ -596,7 +757,6 @@ function applyXeiqdRates(jsonData) {
     } else if (rawTRY > 500) {
       try1000 = Math.round(rawTRY * 10);
     } else if (isUsdRelativeJson) {
-      // گۆڕینی نرخی ١ دۆلار بەرامبەر لیرە بۆ نرخی ١٠٠٠ لیرە بە دینار
       try1000 = Math.round((usdBase100 * 10) / rawTRY);
     } else {
       try1000 = Math.round(rawTRY * 1000);
@@ -604,26 +764,6 @@ function applyXeiqdRates(jsonData) {
     if (try1000 > 0) {
       state.otherRates.TRY = try1000;
       localStorage.setItem('rate_TRY', try1000);
-      updated = true;
-    }
-  }
-
-  // ٤. تمەنی ئێرانی (نرخی ١٠٠,٠٠٠ دینار بە تمەن)
-  if (rawIRR) {
-    let irrPer100k = state.otherRates.IRR;
-    if (!isUsdRelativeJson && rawIRR > 5000000) {
-      irrPer100k = Math.round(rawIRR);
-    } else if (isUsdRelativeJson) {
-      // ١٠٠,٠٠٠ دینار چەند دۆلارە * نرخی تمەن بۆ هەر دۆلارێک
-      irrPer100k = Math.round((10000000 / usdBase100) * rawIRR);
-    } else if (rawIRR < 10000) {
-      irrPer100k = Math.round(rawIRR * 100000);
-    } else {
-      irrPer100k = Math.round((10000000 / usdBase100) * rawIRR);
-    }
-    if (irrPer100k > 0) {
-      state.otherRates.IRR = irrPer100k;
-      localStorage.setItem('rate_IRR', irrPer100k);
       updated = true;
     }
   }
@@ -644,22 +784,26 @@ async function fetchRatesFromXeiqd(force = false) {
   const urlWithCache = `${XEIOD_API_URL}?t=${cacheBuster}`;
 
   const endpoints = [
-    urlWithCache,
-    `https://corsproxy.io/?url=${encodeURIComponent(urlWithCache)}`,
-    `https://api.allorigins.win/raw?url=${encodeURIComponent(urlWithCache)}`,
-    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(urlWithCache)}`
+    { url: urlWithCache, wrapped: false },
+    { url: `https://corsproxy.io/?url=${encodeURIComponent(urlWithCache)}`, wrapped: false },
+    { url: `https://api.allorigins.win/raw?url=${encodeURIComponent(urlWithCache)}`, wrapped: false },
+    { url: `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(urlWithCache)}`, wrapped: false },
+    { url: `https://api.allorigins.win/get?url=${encodeURIComponent(urlWithCache)}`, wrapped: true }
   ];
 
   try {
-    const fetchJson = async (endpoint) => {
+    const fetchJson = async (ep) => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 4000);
       try {
-        const res = await fetch(endpoint, { cache: 'no-store', signal: controller.signal });
+        const res = await fetch(ep.url, { cache: 'no-store', signal: controller.signal });
         clearTimeout(timeoutId);
         if (!res.ok) throw new Error('Bad status');
         const data = await res.json();
         if (!data) throw new Error('Empty JSON');
+        if (ep.wrapped && data.contents) {
+          return JSON.parse(data.contents);
+        }
         return data;
       } catch (e) {
         clearTimeout(timeoutId);
@@ -667,17 +811,340 @@ async function fetchRatesFromXeiqd(force = false) {
       }
     };
 
-    const data = await Promise.any(endpoints.map(ep => fetchJson(ep)));
+    const data = await Promise.any(endpoints.map((ep) => fetchJson(ep)));
     applyXeiqdRates(data);
   } catch (err) {
-    // ئەگەر ئینتەرنێت نەبوو، نرخە پاشەکەوتکراوەکان بەکاردەهێنێت
   } finally {
     isFetchingXeiqd = false;
   }
 }
 
 // =====================================================
-// ٥. سیستمی ٦ پڕۆکسی هاوکات بۆ نرخی دۆلار لە تێلێگرامەوە
+// ٦. وەرگرتنی نرخی کڕینی تمەن بەجیا لە https://rudawindex.net
+// =====================================================
+function parseCleanPositiveNumber(val) {
+  if (val === null || val === undefined) return null;
+  const cleaned = normalizeDigits(String(val)).replace(/,/g, '').trim();
+  const match = cleaned.match(/\d+(\.\d+)?/);
+  if (!match) return null;
+  const num = parseFloat(match[0]);
+  return !isNaN(num) && num > 0 ? num : null;
+}
+
+function searchJsonForTomanBuy(node) {
+  if (!node || typeof node !== 'object') return null;
+
+  if (Array.isArray(node)) {
+    for (const item of node) {
+      const found = searchJsonForTomanBuy(item);
+      if (found) return found;
+    }
+    return null;
+  }
+
+  const labelFields = [
+    node.name, node.title, node.currency, node.code, node.symbol,
+    node.slug, node.name_ku, node.name_ar, node.name_en, node.label
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toUpperCase();
+
+  const isTomanItem =
+    labelFields.includes('IRR') ||
+    labelFields.includes('IRT') ||
+    labelFields.includes('TOMAN') ||
+    labelFields.includes('TMN') ||
+    labelFields.includes('تمەن') ||
+    labelFields.includes('تومەن') ||
+    labelFields.includes('ئێران') ||
+    labelFields.includes('تومان');
+
+  if (isTomanItem) {
+    // تەنها نرخی کڕین (Buy) وەردەگرێت نەک فرۆشتن
+    const buyCandidate =
+      node.buy ??
+      node.buy_rate ??
+      node.buying ??
+      node.buyPrice ??
+      node.buy_price ??
+      node.krin ??
+      node.kreen ??
+      node.price_buy ??
+      node.rate_buy ??
+      node.bid ??
+      node.rate ??
+      node.value;
+
+    const parsedBuy = parseCleanPositiveNumber(buyCandidate);
+    if (parsedBuy && parsedBuy > 100) {
+      const isDirectIqd = labelFields.includes('100,000') || labelFields.includes('IQD');
+      return { buyRate: parsedBuy, basis: isDirectIqd ? 'IQD100K' : 'AUTO' };
+    }
+  }
+
+  for (const key of Object.keys(node)) {
+    const upperKey = key.toUpperCase();
+    if (['IRR', 'IRT', 'TOMAN', 'TMN'].includes(upperKey)) {
+      const sub = node[key];
+      if (sub && typeof sub === 'object') {
+        const buyCandidate = sub.buy ?? sub.buy_rate ?? sub.buying ?? sub.krin ?? sub.price_buy ?? sub.rate;
+        const parsedBuy = parseCleanPositiveNumber(buyCandidate);
+        if (parsedBuy && parsedBuy > 100) {
+          return { buyRate: parsedBuy, basis: 'AUTO' };
+        }
+      }
+    }
+    const deep = searchJsonForTomanBuy(node[key]);
+    if (deep) return deep;
+  }
+
+  return null;
+}
+
+function extractTomanBuyFromRudawContent(rawContent) {
+  if (!rawContent || typeof rawContent !== 'string') return null;
+
+  // ١. ئەگەر ڕاستەوخۆ JSON بوو
+  try {
+    const maybeJson = JSON.parse(rawContent);
+    const fromJson = searchJsonForTomanBuy(maybeJson);
+    if (fromJson) return fromJson;
+  } catch (e) {}
+
+  // ٢. پشکنینی DOM (خشتە و کارتەکانی ناو پەڕەی rudawindex.net)
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(rawContent, 'text/html');
+
+  // پشکنینی سکریپتەکانی ناو پەڕەکە (وەکو __NEXT_DATA__ یان JSONی ناوخۆیی)
+  const scripts = doc.querySelectorAll('script');
+  for (const s of scripts) {
+    const txt = s.textContent || '';
+    if (txt.includes('IRR') || txt.includes('تمەن') || txt.includes('تومەن') || txt.includes('toman')) {
+      try {
+        const jsonVal = JSON.parse(txt);
+        const found = searchJsonForTomanBuy(jsonVal);
+        if (found) return found;
+      } catch (e) {
+        const regexBuy = normalizeDigits(txt).match(
+          /(?:IRR|IRT|تمەن|تومەن|toman)[\s\S]{0,180}?(?:buy|krin|کڕین)["'\s:=]+([\d,]+(?:\.\d+)?)/i
+        );
+        if (regexBuy) {
+          const val = parseCleanPositiveNumber(regexBuy[1]);
+          if (val && val > 100) return { buyRate: val, basis: 'AUTO' };
+        }
+      }
+    }
+  }
+
+  const tomanKeywords = ['تمەن', 'تومەن', 'ئێران', 'تومان', 'IRR', 'IRT', 'TOMAN'];
+  const containsToman = (str) => {
+    if (!str) return false;
+    const up = str.toUpperCase();
+    return tomanKeywords.some((k) => up.includes(k));
+  };
+
+  // ٣. پشکنینی خشتەکان (<table>) بە دۆزینەوەی ستوونی "کڕین"
+  const tables = doc.querySelectorAll('table');
+  for (const table of tables) {
+    let buyColIndex = -1;
+    const headerCells = table.querySelectorAll('thead th, thead td, tr:first-child th, tr:first-child td');
+    headerCells.forEach((cell, idx) => {
+      const hText = normalizeDigits(cell.textContent).trim();
+      if (hText.includes('کڕین') || hText.includes('کرین') || /buy/i.test(hText)) {
+        buyColIndex = idx;
+      }
+    });
+
+    const rows = table.querySelectorAll('tr');
+    for (const row of rows) {
+      const rowText = normalizeDigits(row.textContent);
+      if (!containsToman(rowText)) continue;
+
+      const cells = Array.from(row.querySelectorAll('td, th'));
+      if (buyColIndex >= 0 && cells[buyColIndex]) {
+        const cellNum = parseCleanPositiveNumber(cells[buyColIndex].textContent);
+        if (cellNum && cellNum > 100 && cellNum !== 100) {
+          return { buyRate: cellNum, basis: 'AUTO' };
+        }
+      }
+
+      // لە خشتەی کوردیدا نرخی یەکەم دوای ناوی دراوەکە بریتییە لە نرخی کڕین (و دووەم فرۆشتنە)
+      const numericCells = [];
+      for (const c of cells) {
+        const txt = normalizeDigits(c.textContent).replace(/100\s*\$|100,000/g, '').trim();
+        const matches = txt.match(/\d[\d,.]*/g);
+        if (matches) {
+          for (const m of matches) {
+            const n = parseCleanPositiveNumber(m);
+            if (n && n > 100 && n !== 100 && n !== 1000 && n !== 100000) {
+              numericCells.push(n);
+            }
+          }
+        }
+      }
+      if (numericCells.length >= 1) {
+        return { buyRate: numericCells[0], basis: 'AUTO' };
+      }
+    }
+  }
+
+  // ٤. پشکنینی کارتەکان (Cards / Rows) لەناو پەڕەکەدا
+  const candidateContainers = doc.querySelectorAll('tr, li, article, section, .card, .rate-item, .currency-item, div');
+  for (const el of candidateContainers) {
+    if (el.children.length > 15) continue;
+    const text = normalizeDigits(el.textContent || '').trim();
+    if (!containsToman(text) || text.length > 450) continue;
+
+    // ئەگەر وشەی "کڕین" لەناو کارتەکەدا هەبوو، ڕاستەوخۆ ژمارەی کڕینەکە وەردەگرێت
+    const explicitBuyMatch = text.match(/(?:کڕین|کرین|Buy)[^\d]*([\d,]+(?:\.\d+)?)/i);
+    if (explicitBuyMatch) {
+      const val = parseCleanPositiveNumber(explicitBuyMatch[1]);
+      if (val && val > 100 && val !== 100) {
+        return { buyRate: val, basis: 'AUTO' };
+      }
+    }
+
+    // دەرهێنانی ژمارەکانی نرخ (جگە لە 100$ یان 100,000)؛ یەکەم نرخ = کڕین، دووەم نرخ = فرۆشتن
+    const stripped = text.replace(/100\s*\$|\$\s*100|100,000/g, ' ');
+    const allNums = (stripped.match(/\d[\d,.]*/g) || [])
+      .map((m) => parseCleanPositiveNumber(m))
+      .filter((n) => n && n > 250 && n !== 1000 && n !== 100000);
+
+    if (allNums.length >= 2) {
+      return { buyRate: allNums[0], basis: 'AUTO' };
+    }
+  }
+
+  // ٥. پشکنینی دەقی ڕووت (بۆ دەرئەنجامی r.jina.ai)
+  const cleanFullText = normalizeDigits(rawContent);
+  const lines = cleanFullText.split(/\r?\n/);
+  for (let i = 0; i < lines.length; i++) {
+    if (!containsToman(lines[i])) continue;
+    const windowText = lines.slice(Math.max(0, i - 1), Math.min(lines.length, i + 6)).join(' ');
+
+    const buyLabeled = windowText.match(/(?:کڕین|کرین|Buy)[^\d]*([\d,]+(?:\.\d+)?)/i);
+    if (buyLabeled) {
+      const val = parseCleanPositiveNumber(buyLabeled[1]);
+      if (val && val > 100 && val !== 100) {
+        return { buyRate: val, basis: 'AUTO' };
+      }
+    }
+
+    const strippedWindow = windowText.replace(/100\s*\$|\$\s*100|100,000/g, ' ');
+    const nums = (strippedWindow.match(/\d[\d,.]*/g) || [])
+      .map((m) => parseCleanPositiveNumber(m))
+      .filter((n) => n && n > 250 && n !== 1000 && n !== 100000);
+
+    if (nums.length >= 1) {
+      return { buyRate: nums[0], basis: 'AUTO' };
+    }
+  }
+
+  return null;
+}
+
+function applyRudawTomanRate(rudawObj) {
+  if (!rudawObj || !rudawObj.buyRate || rudawObj.buyRate <= 0) return false;
+
+  cachedRudawBuyObj = rudawObj;
+  try {
+    localStorage.setItem('cachedRudawBuyObj', JSON.stringify(rudawObj));
+  } catch (e) {}
+
+  const rawBuy = rudawObj.buyRate;
+  const usdBase100 = state.baseRatePer100USD;
+  let irrPer100k = state.otherRates.IRR;
+
+  if (rudawObj.basis === 'IQD100K') {
+    irrPer100k = rawBuy < 100000 ? Math.round(rawBuy * 1000) : Math.round(rawBuy);
+  } else if (rawBuy >= 30000000) {
+    // ئەگەر بە ڕیاڵ بوو بۆ ١٠٠ دۆلار، دەگۆڕدرێت بۆ تمەن بۆ ١٠٠,٠٠٠ دینار
+    const tomanPer100Usd = rawBuy / 10;
+    irrPer100k = Math.round((100000 / usdBase100) * tomanPer100Usd);
+  } else if (rawBuy >= 2500000) {
+    // نرخی کڕینی ١٠٠ دۆلار بە تمەن (بۆ نموونە 8,950,000 تمەن) -> دەگۆڕدرێت بۆ نرخی ١٠٠,٠٠٠ دینار
+    irrPer100k = Math.round((100000 / usdBase100) * rawBuy);
+  } else if (rawBuy >= 300000) {
+    // ئەگەر ١ دۆلار بە ڕیاڵ بوو
+    irrPer100k = Math.round((1000000 / usdBase100) * rawBuy);
+  } else if (rawBuy >= 35000) {
+    // نرخی کڕینی ١ دۆلار بە تمەن (بۆ نموونە 89,500 تمەن)
+    irrPer100k = Math.round((10000000 / usdBase100) * rawBuy);
+  } else if (rawBuy >= 2500) {
+    // نرخی کڕینی ١٠٠ دۆلار بە هەزار تمەن (بۆ نموونە 8,950 هەزار تمەن)
+    irrPer100k = Math.round((100000 / usdBase100) * (rawBuy * 1000));
+  } else {
+    irrPer100k = Math.round(rawBuy * 100000);
+  }
+
+  if (irrPer100k > 0) {
+    state.otherRates.IRR = irrPer100k;
+    localStorage.setItem('rate_IRR', irrPer100k);
+    renderRateBanner(false);
+    calculateAndRender();
+    return true;
+  }
+  return false;
+}
+
+let isFetchingRudaw = false;
+async function fetchTomanFromRudaw(force = false) {
+  if (isFetchingRudaw && !force) return;
+  isFetchingRudaw = true;
+
+  const cacheBuster = Date.now();
+  const targetUrl = `${RUDAW_INDEX_URL}/?t=${cacheBuster}`;
+
+  const proxyEndpoints = [
+    { url: `https://r.jina.ai/${RUDAW_INDEX_URL}?t=${cacheBuster}`, wrapped: false },
+    { url: `https://corsproxy.io/?url=${encodeURIComponent(targetUrl)}`, wrapped: false },
+    { url: `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`, wrapped: false },
+    { url: `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`, wrapped: false },
+    { url: `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`, wrapped: true },
+    { url: `https://thingproxy.freeboard.io/fetch/${targetUrl}`, wrapped: false }
+  ];
+
+  try {
+    const fetchAndExtract = async (ep) => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      try {
+        const res = await fetch(ep.url, { cache: 'no-store', signal: controller.signal });
+        clearTimeout(timeoutId);
+        if (!res.ok) throw new Error('Bad response');
+
+        let content = '';
+        if (ep.wrapped) {
+          const json = await res.json();
+          content = json && json.contents ? json.contents : '';
+        } else {
+          content = await res.text();
+        }
+
+        const extracted = extractTomanBuyFromRudawContent(content);
+        if (!extracted || !extracted.buyRate) {
+          throw new Error('Toman buy rate not found in response');
+        }
+        return extracted;
+      } catch (e) {
+        clearTimeout(timeoutId);
+        throw e;
+      }
+    };
+
+    const rudawResult = await Promise.any(proxyEndpoints.map((ep) => fetchAndExtract(ep)));
+    if (rudawResult) {
+      applyRudawTomanRate(rudawResult);
+    }
+  } catch (err) {
+  } finally {
+    isFetchingRudaw = false;
+  }
+}
+
+// =====================================================
+// ٧. وەرگرتنی نرخی دۆلار و بەروار و کاتژمێر تەنها لە کەناڵی تێلێگرامی PMC
 // =====================================================
 function parseChannelHtml(htmlText) {
   const parser = new DOMParser();
@@ -693,8 +1160,11 @@ function parseChannelHtml(htmlText) {
     if (rate) {
       const timeEl = msgEl.querySelector('.tgme_widget_message_date time');
       const datetimeAttr = timeEl ? timeEl.getAttribute('datetime') : null;
-      const postTimestamp = datetimeAttr ? new Date(datetimeAttr).getTime() : Date.now();
-      return { rate, postTimestamp };
+      const parsedTime = datetimeAttr ? new Date(datetimeAttr).getTime() : 0;
+
+      if (parsedTime > 0 && !isNaN(parsedTime)) {
+        return { rate, postTimestamp: parsedTime };
+      }
     }
   }
   return null;
@@ -702,7 +1172,7 @@ function parseChannelHtml(htmlText) {
 
 async function fetchViaSingleProxy(proxyConfig, targetUrl) {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 3200);
+  const timeoutId = setTimeout(() => controller.abort(), 3500);
 
   try {
     const response = await fetch(proxyConfig.buildUrl(targetUrl), {
@@ -722,14 +1192,8 @@ async function fetchViaSingleProxy(proxyConfig, targetUrl) {
       const rawText = await response.text();
       const parsedHtml = parseChannelHtml(rawText);
       if (parsedHtml) return parsedHtml;
-
-      const lines = rawText.split('\n');
-      for (let i = lines.length - 1; i >= 0; i--) {
-        const rate = extractExchangeRate(lines[i]);
-        if (rate) return { rate, postTimestamp: state.lastTimestamp };
-      }
     }
-    throw new Error('No valid rate found');
+    throw new Error('No valid PMC rate with timestamp found');
   } catch (err) {
     clearTimeout(timeoutId);
     throw err;
@@ -764,10 +1228,6 @@ async function fetchPublicChannelPMC(force = false) {
     {
       buildUrl: (u) => `https://thingproxy.freeboard.io/fetch/${u}`,
       isRawText: true
-    },
-    {
-      buildUrl: () => `https://r.jina.ai/https://t.me/s/${TARGET_CHANNEL}?t=${cacheBuster}`,
-      isRawText: true
     }
   ];
 
@@ -776,12 +1236,12 @@ async function fetchPublicChannelPMC(force = false) {
       proxyList.map((proxy) => fetchViaSingleProxy(proxy, targetUrl))
     );
 
-    if (fastestResult && fastestResult.rate) {
+    if (fastestResult && fastestResult.rate && fastestResult.postTimestamp > 0) {
       if (
-        fastestResult.postTimestamp >= state.lastTimestamp ||
+        fastestResult.postTimestamp !== state.pmcTimestamp ||
         fastestResult.rate !== state.baseRatePer100USD
       ) {
-        updateLiveRate(fastestResult.rate, fastestResult.postTimestamp);
+        updateLiveRateFromPMC(fastestResult.rate, fastestResult.postTimestamp);
       }
     }
   } catch (err) {
@@ -792,17 +1252,20 @@ async function fetchPublicChannelPMC(force = false) {
 
 // دەستپێکردنی سەرەتایی بەرنامەکە
 renderConverterLabels();
-updateLiveRate(state.baseRatePer100USD, state.lastTimestamp);
+updateLiveRateFromPMC(state.baseRatePer100USD, state.pmcTimestamp);
 fetchPublicChannelPMC();
 fetchRatesFromXeiqd();
+fetchTomanFromRudaw();
 
 // نوێکردنەوەی خۆکار
 setInterval(fetchPublicChannelPMC, 2500);
 setInterval(fetchRatesFromXeiqd, 60000);
+setInterval(fetchTomanFromRudaw, 45000);
 
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden) {
     fetchPublicChannelPMC();
     fetchRatesFromXeiqd();
+    fetchTomanFromRudaw();
   }
 });
