@@ -1,5 +1,5 @@
 // =====================================================
-// ٠. ڕێکخستنی قەبارەی فۆنت لە ئەندرۆید تا بە هەمان قەبارەی ئایفۆن بێت
+// ٠. هاوتاکردنی قەبارەی نووسینی ئەندرۆید لەگەڵ ئایفۆن
 // =====================================================
 function normalizeTypographyForDevice() {
   const ua = navigator.userAgent || '';
@@ -10,7 +10,6 @@ function normalizeTypographyForDevice() {
     document.body.classList.add('android-device');
   }
 
-  // پێوانەکردنی گەورەکردنی دەسکردی فۆنت لەلایەن سیستەمی ئەندرۆیدەوە
   const probe = document.createElement('div');
   probe.style.cssText = 'position:absolute;visibility:hidden;font-size:16px;width:0;height:0;';
   document.body.appendChild(probe);
@@ -21,7 +20,6 @@ function normalizeTypographyForDevice() {
   const vw = Math.min(window.innerWidth || 390, 430);
 
   if (isAndroid) {
-    // هاوتاکردنی قەبارەی بنەڕەتی لەسەر ئەندرۆید بەرامبەر ئایفۆن (390px)
     const targetPx = Math.min(15.2, Math.max(13.2, (vw / 390) * 14.8));
     const compensatedPx = targetPx / (systemFontBoost > 1.01 ? systemFontBoost : 1);
     docEl.style.fontSize = `${compensatedPx.toFixed(2)}px`;
@@ -69,7 +67,7 @@ document.addEventListener('touchend', (e) => {
 }, { passive: false });
 
 // =====================================================
-// ٢. هاوتاوهەمانکردنی ڕەنگی بنەڕەتی و بەشی Home Indicator
+// ٢. ڕەنگکردنی ناوچەی Home Indicator لە ئایفۆن (ئەپ، لایت، ئینترۆ)
 // =====================================================
 const themeColorMeta = document.getElementById('themeColorMeta');
 let isIntroActive = true;
@@ -85,7 +83,7 @@ function syncSafeAreaThemeColor() {
 }
 
 // =====================================================
-// ٣. بارکردنی خێرای وێنەکان (.jpg و .JPG و .jpeg لە پێشەوەن)
+// ٣. بارکردنی خێرای وێنەکان (.jpg و .JPG و .jpeg)
 // =====================================================
 function resolveImageFile(baseName, onSuccess, onFail) {
   const extensions = ['.jpg', '.JPG', '.jpeg', '.JPEG', '.png', '.PNG', '.webp', ''];
@@ -225,7 +223,7 @@ const state = {
     TRY: Number(localStorage.getItem('rate_TRY')) || 33682,
     IRR: Number(localStorage.getItem('rate_IRR')) || 59435364
   },
-  // بەروار و کاتژمێر تەنها و تەنها پەیوەستن بە کۆتا نرخی دۆلاری کەناڵی تێلێگرامی PMC
+  // تەنها کاتی کۆتا پۆستی دۆلار لە تێلێگرامی PMC هەڵدەگرێت
   pmcTimestamp: Number(localStorage.getItem('savedPmcTime')) || Number(localStorage.getItem('savedTime')) || 0,
   isTopForeign: true,
   rawInput: '0',
@@ -330,7 +328,6 @@ function extractExchangeRate(text) {
   return null;
 }
 
-// پیشاندانی بەروار و کاتژمێر تەنها لەسەر بنەمای کۆتا پۆستی نرخی دۆلاری PMC
 function renderDateOrDay() {
   if (!state.pmcTimestamp || state.pmcTimestamp <= 0) {
     dateDisplayEl.textContent = '--/----/--';
@@ -476,7 +473,6 @@ function calculateAndRender() {
   bottomAmountEl.scrollLeft = bottomAmountEl.scrollWidth;
 }
 
-// نوێکردنەوەی نرخی دۆلار و کاتی تێلێگرام + نوێکردنەوەی دراوەکانی تر بەپێی دۆلارەکە
 function updateLiveRateFromPMC(newBaseRate, pmcPostTimestampMs) {
   const isChanged =
     state.baseRatePer100USD !== newBaseRate ||
@@ -491,7 +487,7 @@ function updateLiveRateFromPMC(newBaseRate, pmcPostTimestampMs) {
     localStorage.setItem('savedTime', pmcPostTimestampMs);
   }
 
-  // دراوەکانی تریش لەسەر گۆڕانکاریی دۆلاری تێلێگرامەکە نوێ دەکرێنەوە
+  // لەگەڵ گۆڕینی دۆلاری تێلێگرام، نرخی دراوەکانی تریش نوێ دەکرێتەوە
   if (cachedXeiqdJson) {
     applyXeiqdRates(cachedXeiqdJson);
   }
@@ -705,7 +701,6 @@ function applyXeiqdRates(jsonData) {
   const isUsdRelativeJson = rawGBP !== null && rawGBP < 10;
   let updated = false;
 
-  // ١. پاوەند
   if (rawGBP) {
     let gbp100 = state.otherRates.GBP;
     if (rawGBP > 50000) {
@@ -726,7 +721,6 @@ function applyXeiqdRates(jsonData) {
     }
   }
 
-  // ٢. یۆرۆ
   if (rawEUR) {
     let eur100 = state.otherRates.EUR;
     if (rawEUR > 50000) {
@@ -749,7 +743,6 @@ function applyXeiqdRates(jsonData) {
     }
   }
 
-  // ٣. لیرەی تورکی
   if (rawTRY) {
     let try1000 = state.otherRates.TRY;
     if (rawTRY > 10000) {
@@ -861,7 +854,7 @@ function searchJsonForTomanBuy(node) {
     labelFields.includes('تومان');
 
   if (isTomanItem) {
-    // تەنها نرخی کڕین (Buy) وەردەگرێت نەک فرۆشتن
+    // تەنها نرخی کڕین (Buy) وەردەگیرێت نەک فرۆشتن
     const buyCandidate =
       node.buy ??
       node.buy_rate ??
@@ -905,18 +898,15 @@ function searchJsonForTomanBuy(node) {
 function extractTomanBuyFromRudawContent(rawContent) {
   if (!rawContent || typeof rawContent !== 'string') return null;
 
-  // ١. ئەگەر ڕاستەوخۆ JSON بوو
   try {
     const maybeJson = JSON.parse(rawContent);
     const fromJson = searchJsonForTomanBuy(maybeJson);
     if (fromJson) return fromJson;
   } catch (e) {}
 
-  // ٢. پشکنینی DOM (خشتە و کارتەکانی ناو پەڕەی rudawindex.net)
   const parser = new DOMParser();
   const doc = parser.parseFromString(rawContent, 'text/html');
 
-  // پشکنینی سکریپتەکانی ناو پەڕەکە (وەکو __NEXT_DATA__ یان JSONی ناوخۆیی)
   const scripts = doc.querySelectorAll('script');
   for (const s of scripts) {
     const txt = s.textContent || '';
@@ -944,7 +934,6 @@ function extractTomanBuyFromRudawContent(rawContent) {
     return tomanKeywords.some((k) => up.includes(k));
   };
 
-  // ٣. پشکنینی خشتەکان (<table>) بە دۆزینەوەی ستوونی "کڕین"
   const tables = doc.querySelectorAll('table');
   for (const table of tables) {
     let buyColIndex = -1;
@@ -969,7 +958,6 @@ function extractTomanBuyFromRudawContent(rawContent) {
         }
       }
 
-      // لە خشتەی کوردیدا نرخی یەکەم دوای ناوی دراوەکە بریتییە لە نرخی کڕین (و دووەم فرۆشتنە)
       const numericCells = [];
       for (const c of cells) {
         const txt = normalizeDigits(c.textContent).replace(/100\s*\$|100,000/g, '').trim();
@@ -989,14 +977,12 @@ function extractTomanBuyFromRudawContent(rawContent) {
     }
   }
 
-  // ٤. پشکنینی کارتەکان (Cards / Rows) لەناو پەڕەکەدا
   const candidateContainers = doc.querySelectorAll('tr, li, article, section, .card, .rate-item, .currency-item, div');
   for (const el of candidateContainers) {
     if (el.children.length > 15) continue;
     const text = normalizeDigits(el.textContent || '').trim();
     if (!containsToman(text) || text.length > 450) continue;
 
-    // ئەگەر وشەی "کڕین" لەناو کارتەکەدا هەبوو، ڕاستەوخۆ ژمارەی کڕینەکە وەردەگرێت
     const explicitBuyMatch = text.match(/(?:کڕین|کرین|Buy)[^\d]*([\d,]+(?:\.\d+)?)/i);
     if (explicitBuyMatch) {
       const val = parseCleanPositiveNumber(explicitBuyMatch[1]);
@@ -1005,7 +991,6 @@ function extractTomanBuyFromRudawContent(rawContent) {
       }
     }
 
-    // دەرهێنانی ژمارەکانی نرخ (جگە لە 100$ یان 100,000)؛ یەکەم نرخ = کڕین، دووەم نرخ = فرۆشتن
     const stripped = text.replace(/100\s*\$|\$\s*100|100,000/g, ' ');
     const allNums = (stripped.match(/\d[\d,.]*/g) || [])
       .map((m) => parseCleanPositiveNumber(m))
@@ -1016,7 +1001,6 @@ function extractTomanBuyFromRudawContent(rawContent) {
     }
   }
 
-  // ٥. پشکنینی دەقی ڕووت (بۆ دەرئەنجامی r.jina.ai)
   const cleanFullText = normalizeDigits(rawContent);
   const lines = cleanFullText.split(/\r?\n/);
   for (let i = 0; i < lines.length; i++) {
@@ -1059,20 +1043,15 @@ function applyRudawTomanRate(rudawObj) {
   if (rudawObj.basis === 'IQD100K') {
     irrPer100k = rawBuy < 100000 ? Math.round(rawBuy * 1000) : Math.round(rawBuy);
   } else if (rawBuy >= 30000000) {
-    // ئەگەر بە ڕیاڵ بوو بۆ ١٠٠ دۆلار، دەگۆڕدرێت بۆ تمەن بۆ ١٠٠,٠٠٠ دینار
     const tomanPer100Usd = rawBuy / 10;
     irrPer100k = Math.round((100000 / usdBase100) * tomanPer100Usd);
   } else if (rawBuy >= 2500000) {
-    // نرخی کڕینی ١٠٠ دۆلار بە تمەن (بۆ نموونە 8,950,000 تمەن) -> دەگۆڕدرێت بۆ نرخی ١٠٠,٠٠٠ دینار
     irrPer100k = Math.round((100000 / usdBase100) * rawBuy);
   } else if (rawBuy >= 300000) {
-    // ئەگەر ١ دۆلار بە ڕیاڵ بوو
     irrPer100k = Math.round((1000000 / usdBase100) * rawBuy);
   } else if (rawBuy >= 35000) {
-    // نرخی کڕینی ١ دۆلار بە تمەن (بۆ نموونە 89,500 تمەن)
     irrPer100k = Math.round((10000000 / usdBase100) * rawBuy);
   } else if (rawBuy >= 2500) {
-    // نرخی کڕینی ١٠٠ دۆلار بە هەزار تمەن (بۆ نموونە 8,950 هەزار تمەن)
     irrPer100k = Math.round((100000 / usdBase100) * (rawBuy * 1000));
   } else {
     irrPer100k = Math.round(rawBuy * 100000);
@@ -1124,7 +1103,7 @@ async function fetchTomanFromRudaw(force = false) {
 
         const extracted = extractTomanBuyFromRudawContent(content);
         if (!extracted || !extracted.buyRate) {
-          throw new Error('Toman buy rate not found in response');
+          throw new Error('Toman buy rate not found');
         }
         return extracted;
       } catch (e) {
@@ -1269,3 +1248,4 @@ document.addEventListener('visibilitychange', () => {
     fetchTomanFromRudaw();
   }
 });
+// === کۆتایی فایلی script.js ===
