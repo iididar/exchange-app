@@ -1,8 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+Arabic:wght@500;700;800&display=swap');
 
-/* ڕەنگەکانی دۆخی تاریک (بنەڕەتی - On) */
 :root {
   --bg-gradient: radial-gradient(circle at 50% 20%, #2a241b 0%, #141414 60%, #0d0d0d 100%);
+  --bottom-safe-bg: #0d0d0d;
   --gold-primary: #f5a623;
   --title-color: #f5a623;
   --rate-color: #f5a623;
@@ -28,9 +28,9 @@
   --hamburger-color: #f5a623;
 }
 
-/* ڕەنگەکانی دۆخی ڕووناک کاتێک دۆخی تاریک Off دەکرێت */
 body.light-mode {
   --bg-gradient: radial-gradient(circle at 50% 25%, #fdfbf6 0%, #f5e4c3 55%, #f2dec0 100%);
+  --bottom-safe-bg: #f2dec0;
   --gold-primary: #b8731a;
   --title-color: #a66112;
   --rate-color: #c97f22;
@@ -56,7 +56,6 @@ body.light-mode {
   --hamburger-color: #a66112;
 }
 
-/* قفڵکردنی ١٠٠٪ی Zoom و جووڵەی زیادەی شاشە */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -68,33 +67,89 @@ body.light-mode {
   touch-action: none;
 }
 
-html, body {
+html {
   width: 100%;
   height: 100%;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
+  background-color: #111615;
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  width: 100%;
+  height: 100%;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
   overflow: hidden;
   position: fixed;
   inset: 0;
   touch-action: none;
-  background: var(--bg-gradient);
+  background-color: var(--bottom-safe-bg);
+  background-image: var(--bg-gradient);
   color: var(--text-white);
   font-family: 'Noto Sans Arabic', 'Inter', sans-serif;
   display: flex;
   justify-content: center;
   align-items: center;
-  transition: background 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s ease;
-  padding-bottom: env(safe-area-inset-bottom);
+  transition: background-color 0.5s ease, color 0.4s ease;
 }
 
-/* شاشەی ئینترۆ */
+/* داپۆشینی تەواوەتی ناوچەی Home Indicator لە ئایفۆن بۆ ئەوەی هەرگیز سپی نەبێت */
+body::before {
+  content: "";
+  position: fixed;
+  top: -120px;
+  left: -60px;
+  right: -60px;
+  bottom: -120px;
+  background-color: var(--bottom-safe-bg);
+  background-image: var(--bg-gradient);
+  z-index: -2;
+  pointer-events: none;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(-1 * env(safe-area-inset-bottom, 0px) - 60px);
+  height: calc(env(safe-area-inset-bottom, 0px) + 65px);
+  background-color: var(--bottom-safe-bg);
+  z-index: -1;
+  pointer-events: none;
+}
+
 .intro-overlay {
   position: fixed;
-  inset: 0;
-  background: #111615;
+  top: calc(-1 * env(safe-area-inset-top, 0px));
+  left: 0;
+  right: 0;
+  bottom: calc(-1 * env(safe-area-inset-bottom, 0px));
+  width: 100vw;
+  height: calc(100dvh + env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px));
+  background-color: #111615;
   z-index: 9999;
   display: flex;
   justify-content: center;
   align-items: center;
   transition: opacity 0.65s ease, visibility 0.65s ease;
+}
+
+.intro-overlay::after {
+  content: "";
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: -100px;
+  height: 140px;
+  background-color: #111615;
+  z-index: -1;
 }
 
 .intro-overlay.hide {
@@ -116,25 +171,31 @@ html, body {
   100% { transform: scale(1); opacity: 1; }
 }
 
-/* پەڕەی سەرەکی */
+/* ڕێکخستنی پەڕەکە تا لە Add to Home Screen نەچێتە سەرەوە و دەست لە Hamburger بدرێت */
 .app-container {
   width: 100%;
   max-width: 410px;
   height: 100%;
-  max-height: 860px;
-  padding: 18px 22px calc(22px + env(safe-area-inset-bottom)) 22px;
+  max-height: 880px;
+  padding-top: max(18px, calc(env(safe-area-inset-top, 0px) + 12px));
+  padding-right: 22px;
+  padding-bottom: max(20px, calc(env(safe-area-inset-bottom, 0px) + 14px));
+  padding-left: 22px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  position: relative;
+  z-index: 1;
 }
 
-/* بەشی سەرەوە */
 .top-bar {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   direction: ltr;
   min-height: 64px;
+  position: relative;
+  z-index: 30;
 }
 
 .signature-link {
@@ -149,6 +210,7 @@ html, body {
   overflow: hidden;
   text-decoration: none;
   cursor: pointer;
+  touch-action: manipulation;
   transition: transform 0.15s ease, opacity 0.15s ease;
 }
 
@@ -198,6 +260,8 @@ body.light-mode .signature-img.clean-alpha {
   flex-direction: column;
   align-items: flex-end;
   gap: 5px;
+  position: relative;
+  z-index: 35;
 }
 
 .top-actions-row {
@@ -207,8 +271,8 @@ body.light-mode .signature-img.clean-alpha {
 }
 
 .refresh-btn {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border-radius: 10px;
   background: var(--hamburger-bg);
   border: 1px solid var(--card-border);
@@ -217,7 +281,10 @@ body.light-mode .signature-img.clean-alpha {
   align-items: center;
   cursor: pointer;
   color: var(--hamburger-color);
-  transition: transform 0.15s ease, background 0.3s ease, border-color 0.3s ease;
+  touch-action: manipulation;
+  position: relative;
+  z-index: 40;
+  transition: transform 0.15s ease, background 0.3s ease;
 }
 
 .refresh-btn:active {
@@ -227,7 +294,8 @@ body.light-mode .signature-img.clean-alpha {
 .refresh-btn svg {
   width: 17px;
   height: 17px;
-  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  transition: transform 0.6s ease;
 }
 
 .refresh-btn.spinning svg {
@@ -235,8 +303,8 @@ body.light-mode .signature-img.clean-alpha {
 }
 
 .hamburger-btn {
-  width: 38px;
-  height: 34px;
+  width: 40px;
+  height: 36px;
   border-radius: 10px;
   background: var(--hamburger-bg);
   border: 1px solid var(--card-border);
@@ -246,7 +314,10 @@ body.light-mode .signature-img.clean-alpha {
   align-items: center;
   gap: 4.5px;
   cursor: pointer;
-  transition: transform 0.15s ease, background 0.3s ease, border-color 0.3s ease;
+  touch-action: manipulation;
+  position: relative;
+  z-index: 40;
+  transition: transform 0.15s ease, background 0.3s ease;
 }
 
 .hamburger-btn:active {
@@ -259,7 +330,7 @@ body.light-mode .signature-img.clean-alpha {
   height: 2px;
   background: var(--hamburger-color);
   border-radius: 2px;
-  transition: background 0.3s ease;
+  pointer-events: none;
 }
 
 .datetime-box {
@@ -267,7 +338,6 @@ body.light-mode .signature-img.clean-alpha {
   color: var(--text-muted);
   font-size: 0.9rem;
   line-height: 1.4;
-  transition: color 0.4s ease;
 }
 
 #dateDisplay {
@@ -277,9 +347,8 @@ body.light-mode .signature-img.clean-alpha {
   padding: 2px 6px;
   margin-right: -6px;
   border-radius: 6px;
-  letter-spacing: 0.4px;
   direction: ltr;
-  transition: transform 0.18s ease, opacity 0.18s ease, background 0.2s ease;
+  touch-action: manipulation;
 }
 
 #dateDisplay:active {
@@ -293,7 +362,6 @@ body.light-mode .signature-img.clean-alpha {
   letter-spacing: 0.5px;
 }
 
-/* پەڕەی مۆدێرنی ناو Hamburger Menu */
 .menu-backdrop {
   position: fixed;
   inset: 0;
@@ -307,7 +375,7 @@ body.light-mode .signature-img.clean-alpha {
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding: 40px 20px 20px;
+  padding: max(40px, calc(env(safe-area-inset-top, 0px) + 20px)) 20px 20px;
   overflow-y: auto;
 }
 
@@ -325,7 +393,7 @@ body.light-mode .signature-img.clean-alpha {
   padding: 20px 18px 16px;
   box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
   transform: translateY(-25px) scale(0.95);
-  transition: transform 0.38s cubic-bezier(0.22, 1, 0.36, 1), background 0.4s ease, border-color 0.4s ease;
+  transition: transform 0.38s ease;
   direction: rtl;
   display: flex;
   flex-direction: column;
@@ -362,6 +430,7 @@ body.light-mode .signature-img.clean-alpha {
   justify-content: center;
   align-items: center;
   cursor: pointer;
+  touch-action: manipulation;
 }
 
 .menu-item {
@@ -373,7 +442,6 @@ body.light-mode .signature-img.clean-alpha {
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .menu-item-text {
@@ -384,7 +452,6 @@ body.light-mode .signature-img.clean-alpha {
   flex: 1;
 }
 
-/* بەشی هەڵبژاردنی دراوەکان لە مێنۆدا */
 .currency-selector-box {
   background: var(--menu-item-bg);
   border: 1px solid var(--card-border);
@@ -408,11 +475,7 @@ body.light-mode .signature-img.clean-alpha {
   width: 100%;
 }
 
-.currency-row.top-row button {
-  flex: 1;
-}
-
-.currency-row.bottom-row button {
+.currency-row button {
   flex: 1;
 }
 
@@ -427,6 +490,7 @@ body.light-mode .signature-img.clean-alpha {
   color: var(--text-white);
   cursor: pointer;
   text-align: center;
+  touch-action: manipulation;
   transition: all 0.25s ease;
 }
 
@@ -442,7 +506,6 @@ body.light-mode .signature-img.clean-alpha {
   font-weight: 800;
 }
 
-/* دیزاینی Toggle Switch */
 .toggle-switch {
   position: relative;
   width: 50px;
@@ -450,6 +513,7 @@ body.light-mode .signature-img.clean-alpha {
   flex-shrink: 0;
   cursor: pointer;
   display: inline-block;
+  touch-action: manipulation;
 }
 
 .toggle-switch input {
@@ -464,7 +528,7 @@ body.light-mode .signature-img.clean-alpha {
   inset: 0;
   background-color: #555558;
   border-radius: 34px;
-  transition: background-color 0.32s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.32s ease;
+  transition: background-color 0.32s ease;
 }
 
 body.light-mode .toggle-slider {
@@ -477,13 +541,11 @@ body.light-mode .toggle-slider {
   height: 22px;
   width: 22px;
   right: 3px;
-  left: auto;
   top: 3px;
   background-color: #ffffff;
   border-radius: 50%;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
-  transform: translateX(0);
-  transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.32s ease;
 }
 
 .toggle-switch input:checked + .toggle-slider {
@@ -504,11 +566,9 @@ body.light-mode .toggle-slider {
   font-size: 0.76rem;
   font-weight: 600;
   color: var(--text-muted);
-  letter-spacing: 0.4px;
   direction: ltr;
 }
 
-/* بەشی ناونیشان و نرخی دراوەکان */
 .rate-header {
   text-align: center;
   margin: 0 0 6px;
@@ -520,18 +580,19 @@ body.light-mode .toggle-slider {
   color: var(--title-color);
   text-shadow: 0 0 18px var(--gold-glow);
   margin-bottom: 4px;
-  transition: color 0.4s ease, text-shadow 0.4s ease;
+  line-height: 1.3;
 }
 
 .rate-banner {
   direction: ltr;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', 'Noto Sans Arabic', sans-serif;
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--rate-color);
   text-shadow: 0 0 20px var(--gold-glow);
   letter-spacing: 0.5px;
-  transition: transform 0.25s ease, color 0.4s ease, text-shadow 0.4s ease;
+  line-height: 1.35;
+  transition: transform 0.25s ease;
 }
 
 .rate-banner.pulse {
@@ -556,7 +617,6 @@ body.light-mode .toggle-slider {
   align-items: center;
   direction: ltr;
   box-shadow: var(--card-shadow);
-  transition: background 0.45s ease, border-color 0.45s ease, box-shadow 0.45s ease;
 }
 
 .currency-card.active-input {
@@ -572,7 +632,6 @@ body.light-mode .toggle-slider {
   white-space: nowrap;
   max-width: 70%;
   scrollbar-width: none;
-  transition: color 0.4s ease;
 }
 
 .amount-display::-webkit-scrollbar {
@@ -591,7 +650,7 @@ body.light-mode .toggle-slider {
   font-weight: 700;
   color: var(--gold-primary);
   text-shadow: 0 0 10px var(--gold-glow);
-  transition: color 0.4s ease, text-shadow 0.4s ease;
+  line-height: 1.25;
 }
 
 .currency-symbol {
@@ -600,7 +659,6 @@ body.light-mode .toggle-slider {
   font-weight: 600;
   color: var(--gold-primary);
   margin-top: 2px;
-  transition: color 0.4s ease;
 }
 
 .swap-btn {
@@ -619,7 +677,7 @@ body.light-mode .toggle-slider {
   align-items: center;
   cursor: pointer;
   z-index: 5;
-  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background 0.4s ease, box-shadow 0.4s ease;
+  transition: transform 0.2s ease;
 }
 
 .swap-btn.pressed {
@@ -631,7 +689,6 @@ body.light-mode .toggle-slider {
   height: 24px;
   stroke: var(--swap-icon);
   stroke-width: 2.2;
-  transition: stroke 0.4s ease;
 }
 
 .keypad {
@@ -656,7 +713,7 @@ body.light-mode .toggle-slider {
   color: var(--btn-text);
   box-shadow: var(--btn-shadow);
   cursor: pointer;
-  transition: background 0.35s ease, color 0.35s ease, box-shadow 0.35s ease, transform 0.06s ease;
+  transition: transform 0.06s ease;
 }
 
 .key-btn.pressed {
@@ -677,5 +734,44 @@ body.light-mode .toggle-slider {
 
 .key-btn svg path {
   stroke: var(--btn-text);
-  transition: stroke 0.35s ease;
+}
+
+/* هاوتاکردنی قەبارەی نووسین و پێکهاتەکانی ئەندرۆید لەگەڵ ئایفۆن */
+body.android-device .rate-title {
+  font-size: 1.62rem;
+}
+
+body.android-device .rate-banner {
+  font-size: 1.35rem;
+}
+
+body.android-device .amount-display {
+  font-size: 1.92rem;
+}
+
+body.android-device .currency-name {
+  font-size: 1.12rem;
+}
+
+body.android-device .currency-symbol {
+  font-size: 1.16rem;
+}
+
+body.android-device .currency-card {
+  padding: 15px 20px;
+}
+
+body.android-device .key-btn {
+  height: 54px;
+  font-size: 1.52rem;
+}
+
+body.android-device .menu-item-text,
+body.android-device .currency-selector-label {
+  font-size: 0.84rem;
+}
+
+body.android-device .curr-select-btn {
+  font-size: 0.8rem;
+  padding: 9px 5px;
 }
